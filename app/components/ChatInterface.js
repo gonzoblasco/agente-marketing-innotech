@@ -2,12 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 
-export default function ChatInterface() {
+export default function ChatInterface({ agent }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content:
-        '¡Hola! Soy tu Consultor de Marketing Digital especializado en PyMEs argentinas. Tengo 10 años ayudando a pequeñas empresas a crecer digitalmente. ¿En qué puedo ayudarte hoy? 🚀',
+      content: agent.welcomeMessage,
     },
   ]);
 
@@ -39,7 +38,10 @@ export default function ChatInterface() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({
+          messages: updatedMessages,
+          agentId: agent.id,
+        }),
       });
 
       if (!response.ok) {
@@ -76,16 +78,14 @@ export default function ChatInterface() {
   return (
     <div className='max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden'>
       {/* Header del chat */}
-      <div className='bg-blue-600 text-white p-4'>
+      <div className={`bg-gradient-to-r ${agent.gradient} text-white p-4`}>
         <div className='flex items-center'>
-          <div className='w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center mr-3'>
-            🎯
+          <div className='w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3'>
+            {agent.emoji}
           </div>
           <div>
-            <h3 className='font-semibold'>Consultor de Marketing Digital</h3>
-            <p className='text-blue-100 text-sm'>
-              Especialista en PyMEs argentinas
-            </p>
+            <h3 className='font-semibold'>{agent.name}</h3>
+            <p className='text-white/80 text-sm'>{agent.title}</p>
           </div>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function ChatInterface() {
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.role === 'user'
-                  ? 'bg-blue-600 text-white'
+                  ? `bg-gradient-to-r ${agent.gradient} text-white`
                   : 'bg-white text-gray-800 shadow border'
               }`}
             >
@@ -147,7 +147,7 @@ export default function ChatInterface() {
           <button
             onClick={sendMessage}
             disabled={isLoading || !inputMessage.trim()}
-            className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium'
+            className={`bg-gradient-to-r ${agent.gradient} text-white px-6 py-3 rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-medium`}
           >
             {isLoading ? (
               <div className='flex items-center'>
