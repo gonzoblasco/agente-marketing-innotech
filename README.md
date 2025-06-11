@@ -138,7 +138,7 @@ CLAUDE_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 - [ ] Sistema de usuarios y autenticación
 - [ ] Persistencia de conversaciones en base de datos
 - [ ] Contador de mensajes por usuario
-- [ ] Sistema de planes y monetización
+- [ ] Sistema de planes y monetización con MercadoPago
 - [ ] Exportar/importar contexto de conversaciones
 - [ ] Dashboard de usuario
 - [ ] Métricas y analytics
@@ -146,7 +146,7 @@ CLAUDE_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ### 🔮 Futuro (Días 3+)
 
 - [ ] Más agentes especializados
-- [ ] Integración con Stripe para pagos
+- [ ] Integración completa con MercadoPago (suscripciones recurrentes)
 - [ ] API pública para terceros
 - [ ] Mobile app (React Native)
 - [ ] Agentes con memoria a largo plazo

@@ -11,8 +11,8 @@ Soy **Gonzalo Blasco**, emprendedor y consultor en IA aplicada, con base en Buen
 ### Estructura de Precios Planificada:
 
 - **Plan Lite (Gratuito):** Acceso a 3 agentes básicos, 100 mensajes/mes
-- **Plan Pro ($25/mes):** Catálogo completo, 1000 mensajes/mes
-- **Plan Elite ($50/mes):** Catálogo premium + agentes avanzados, 2000 mensajes/mes
+- **Plan Pro ($30.000 ARS/mes):** Catálogo completo, 1000 mensajes/mes
+- **Plan Elite ($60.000 ARS/mes):** Catálogo premium + agentes avanzados, 2000 mensajes/mes
 
 ## 📊 ESTADO ACTUAL DEL PROYECTO (DÍA 1 COMPLETADO)
 
@@ -71,9 +71,10 @@ app/
 
 ### PRIORIDAD 4: MONETIZACIÓN BÁSICA
 
-- [ ] Integración con Stripe
-- [ ] Planes de suscripción
+- [ ] Integración con MercadoPago (más apropiado para Argentina)
+- [ ] Planes de suscripción con pagos recurrentes
 - [ ] Manejo de upgrades/downgrades
+- [ ] Soporte para pesos argentinos y pagos locales
 
 ## 💻 MI PERFIL TÉCNICO
 
@@ -111,13 +112,30 @@ El código completo está disponible en el repositorio que compartí, incluyendo
 1. **Sistema de usuarios funcional** (registro/login/dashboard)
 2. **Persistencia de conversaciones** en base de datos
 3. **Límites de mensajes** por plan implementados
-4. **Stripe básico** para empezar a cobrar
+4. **MercadoPago básico** para empezar a cobrar en pesos argentinos
 5. **Deploy actualizado** con nuevas funcionalidades
 
 ## ❓ PREGUNTAS PARA ARRANCAR
 
 1. ¿Con qué servicio de autenticación prefieres empezar? (NextAuth, Clerk, Auth0)
 2. ¿Qué base de datos te parece más simple? (Supabase, PlanetScale, Vercel Postgres)
-3. ¿Empezamos directo con Stripe o un MVP más simple de límites?
+3. ¿Empezamos directo con MercadoPago o un MVP más simple de límites?
+
+## 💰 CONTEXTO MERCADOPAGO
+
+**¿Por qué MercadoPago?**
+
+- Líder en pagos digitales en Argentina
+- Acepta tarjetas de crédito/débito locales
+- Soporte nativo para pesos argentinos
+- Conocido y confiable para usuarios argentinos
+- APIs bien documentadas y soporte local
+- Menor fricción para conversión de usuarios locales
+
+**Planes de pricing en ARS:**
+
+- **Plan Lite:** Gratuito
+- **Plan Pro:** $30.000 ARS/mes ($25 USD)
+- **Plan Elite:** $60.000 ARS/mes ($50 USD)
 
 **¿Estás listo para el Día 2? ¡Vamos a hacer que InnoTech Solutions empiece a generar ingresos! 💰**
