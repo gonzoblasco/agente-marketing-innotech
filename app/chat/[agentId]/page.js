@@ -23,13 +23,12 @@ export default async function ChatPage({ params }) {
   );
 }
 
-// ⭐ CAMBIO: También hacer async la función de metadata
 export async function generateMetadata({ params }) {
   const { agentId } = await params;
   const agent = getAgent(agentId);
 
   return {
-    title: `${agent.name} - InnoTech Solutions`,
+    title: agent.name, // ← Solo el nombre del agente
     description: agent.description,
   };
 }
