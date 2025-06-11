@@ -3,8 +3,9 @@ import ChatInterface from '../../components/ChatInterface';
 import AgentHeader from '../../components/AgentHeader';
 import { notFound } from 'next/navigation';
 
-export default function ChatPage({ params }) {
-  const { agentId } = params;
+export default async function ChatPage({ params }) {
+  // ⭐ CAMBIO: Await params antes de usarlos
+  const { agentId } = await params;
   const agent = getAgent(agentId);
 
   // Si el agente no existe, mostrar 404
@@ -22,9 +23,9 @@ export default function ChatPage({ params }) {
   );
 }
 
-// Generar metadata dinámico para SEO
-export function generateMetadata({ params }) {
-  const { agentId } = params;
+// ⭐ CAMBIO: También hacer async la función de metadata
+export async function generateMetadata({ params }) {
+  const { agentId } = await params;
   const agent = getAgent(agentId);
 
   return {

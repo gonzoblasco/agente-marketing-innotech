@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import FormattedMessage from './FormattedMessage';
 
 export default function ChatInterface({ agent }) {
   const [messages, setMessages] = useState([
@@ -106,7 +107,10 @@ export default function ChatInterface({ agent }) {
                   : 'bg-white text-gray-800 shadow border'
               }`}
             >
-              <p className='text-sm whitespace-pre-wrap'>{message.content}</p>
+              <FormattedMessage
+                content={message.content}
+                isUser={message.role === 'user'}
+              />
             </div>
           </div>
         ))}
