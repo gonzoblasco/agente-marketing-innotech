@@ -91,7 +91,7 @@ export default function ChatInterface() {
       </div>
 
       {/* Área de mensajes */}
-      <div className='h-96 overflow-y-auto p-4 space-y-4'>
+      <div className='h-96 overflow-y-auto p-4 space-y-4 bg-gray-50'>
         {messages.map((message, index) => (
           <div
             key={index}
@@ -103,7 +103,7 @@ export default function ChatInterface() {
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.role === 'user'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-800'
+                  : 'bg-white text-gray-800 shadow border'
               }`}
             >
               <p className='text-sm whitespace-pre-wrap'>{message.content}</p>
@@ -113,7 +113,7 @@ export default function ChatInterface() {
 
         {isLoading && (
           <div className='flex justify-start'>
-            <div className='bg-gray-200 text-gray-800 px-4 py-2 rounded-lg'>
+            <div className='bg-white text-gray-800 px-4 py-2 rounded-lg shadow border'>
               <div className='flex space-x-1'>
                 <div className='w-2 h-2 bg-gray-500 rounded-full animate-bounce'></div>
                 <div
@@ -132,29 +132,39 @@ export default function ChatInterface() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className='border-t p-4'>
-        <div className='flex space-x-2'>
+      {/* Input area - MEJORADO */}
+      <div className='border-t bg-white p-4'>
+        <div className='flex space-x-3'>
           <textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder='Escribí tu consulta sobre marketing digital...'
-            className='flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
+            className='flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none bg-white'
             rows='2'
             disabled={isLoading}
           />
           <button
             onClick={sendMessage}
             disabled={isLoading || !inputMessage.trim()}
-            className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+            className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium'
           >
-            {isLoading ? '...' : 'Enviar'}
+            {isLoading ? (
+              <div className='flex items-center'>
+                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></div>
+                Enviando...
+              </div>
+            ) : (
+              'Enviar'
+            )}
           </button>
         </div>
 
-        <div className='mt-2 text-xs text-gray-500 text-center'>
-          Presioná Enter para enviar • Shift+Enter para nueva línea
+        <div className='mt-3 text-xs text-gray-500 text-center'>
+          Presioná <kbd className='bg-gray-100 px-2 py-1 rounded'>Enter</kbd>{' '}
+          para enviar •{' '}
+          <kbd className='bg-gray-100 px-2 py-1 rounded'>Shift+Enter</kbd> para
+          nueva línea
         </div>
       </div>
     </div>
