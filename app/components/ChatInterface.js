@@ -1,0 +1,162 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+
+export default function ChatInterface() {
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content:
+        '¡Hola! Soy tu Consultor de Marketing Digital especializado en PyMEs argentinas. Tengo 10 años ayudando a pequeñas empresas a crecer digitalmente. ¿En qué puedo ayudarte hoy? 🚀',
+    },
+  ]);
+
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage = { role: 'user', content: inputMessage };
+    const updatedMessages = [...messages, userMessage];
+
+    setMessages(updatedMessages);
+    setInputMessage('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: updatedMessages }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+
+      const data = await response.json();
+
+      setMessages([
+        ...updatedMessages,
+        { role: 'assistant', content: data.message },
+      ]);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages([
+        ...updatedMessages,
+        {
+          role: 'assistant',
+          content: 'Disculpá, hubo un error técnico. ¿Podés intentar de nuevo?',
+        },
+      ]);
+    }
+
+    setIsLoading(false);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  return (
+    <div className='max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden'>
+      {/* Header del chat */}
+      <div className='bg-blue-600 text-white p-4'>
+        <div className='flex items-center'>
+          <div className='w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center mr-3'>
+            🎯
+          </div>
+          <div>
+            <h3 className='font-semibold'>Consultor de Marketing Digital</h3>
+            <p className='text-blue-100 text-sm'>
+              Especialista en PyMEs argentinas
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Área de mensajes */}
+      <div className='h-96 overflow-y-auto p-4 space-y-4'>
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${
+              message.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                message.role === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-800'
+              }`}
+            >
+              <p className='text-sm whitespace-pre-wrap'>{message.content}</p>
+            </div>
+          </div>
+        ))}
+
+        {isLoading && (
+          <div className='flex justify-start'>
+            <div className='bg-gray-200 text-gray-800 px-4 py-2 rounded-lg'>
+              <div className='flex space-x-1'>
+                <div className='w-2 h-2 bg-gray-500 rounded-full animate-bounce'></div>
+                <div
+                  className='w-2 h-2 bg-gray-500 rounded-full animate-bounce'
+                  style={{ animationDelay: '0.1s' }}
+                ></div>
+                <div
+                  className='w-2 h-2 bg-gray-500 rounded-full animate-bounce'
+                  style={{ animationDelay: '0.2s' }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input area */}
+      <div className='border-t p-4'>
+        <div className='flex space-x-2'>
+          <textarea
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder='Escribí tu consulta sobre marketing digital...'
+            className='flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
+            rows='2'
+            disabled={isLoading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={isLoading || !inputMessage.trim()}
+            className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+          >
+            {isLoading ? '...' : 'Enviar'}
+          </button>
+        </div>
+
+        <div className='mt-2 text-xs text-gray-500 text-center'>
+          Presioná Enter para enviar • Shift+Enter para nueva línea
+        </div>
+      </div>
+    </div>
+  );
+}
