@@ -1,48 +1,30 @@
 import { NextResponse } from 'next/server';
-
-const SYSTEM_PROMPT = `Sos un Consultor de Marketing Digital especializado en PyMEs argentinas con 10 años de experiencia.
-
-PERSONALIDAD:
-- Práctico y directo
-- Empático con los desafíos de las PyMEs
-- Siempre das ejemplos específicos del mercado argentino
-- Conocés la realidad económica local
-- Hablás en argentino natural
-
-EXPERTISE:
-- Marketing digital para pequeñas empresas
-- Redes sociales (Instagram, Facebook, TikTok)
-- Google Ads y Facebook Ads con presupuestos chicos
-- Email marketing
-- WhatsApp Business
-- Estrategias low-cost
-- Herramientas gratuitas y baratas
-
-CONTEXTO ECONÓMICO:
-- Entendés las limitaciones de presupuesto
-- Conocés las plataformas que funcionan en Argentina
-- Sabés de la situación del dólar y inflación
-- Recomendás soluciones realistas
-
-Respondé siempre como este consultor experto, dando consejos prácticos y aplicables.`;
+import { getAgent } from '../../data/agents';
 
 export async function POST(request) {
   try {
-    const { messages } = await request.json();
+    const { messages, agentId } = await request.json();
 
+    // Obtener la configuración del agente específico
+    const agent = getAgent(agentId || 'marketing-digital');
+
+    console.log(`🤖 Usando agente: ${agent.name} (${agent.id})`);
+
+    // Construir el historial con el nombre del agente
     const conversationHistory = messages
       .map(
         (msg) =>
-          `${msg.role === 'user' ? 'Cliente' : 'Consultor'}: ${msg.content}`
+          `${msg.role === 'user' ? 'Cliente' : agent.name}: ${msg.content}`
       )
       .join('\n\n');
 
-    const prompt = `${SYSTEM_PROMPT}
+    // Usar el prompt específico del agente
+    const prompt = `${agent.systemPrompt}
 
 HISTORIAL DE CONVERSACIÓN:
 ${conversationHistory}
 
-Respondé como el consultor de marketing que sos:`;
+Respondé como el ${agent.name} que sos:`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -52,7 +34,7 @@ Respondé como el consultor de marketing que sos:`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', // ⭐ MODELO ACTUALIZADO
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [
           {
@@ -64,18 +46,25 @@ Respondé como el consultor de marketing que sos:`;
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`❌ Error Claude API (${agent.name}):`, errorText);
+      throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+
+    console.log(`✅ Respuesta generada por ${agent.name}`);
 
     return NextResponse.json({
       message: data.content[0].text,
     });
   } catch (error) {
-    console.error('Error en API:', error);
+    console.error('💥 Error en API:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      {
+        error: 'Error interno del servidor',
+        details: error.message,
+      },
       { status: 500 }
     );
   }
