@@ -1,5 +1,6 @@
 import AgentGallery from './components/AgentGallery';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'InnoTech Solutions - Netflix de Agentes Conversacionales',
@@ -29,7 +30,15 @@ export default function Home() {
             </SignedOut>
 
             <SignedIn>
-              <UserButton afterSignOutUrl='/' />
+              <div className='flex items-center space-x-4'>
+                <Link
+                  href='/dashboard'
+                  className='text-blue-600 hover:text-blue-700 font-medium'
+                >
+                  Dashboard
+                </Link>
+                <UserButton afterSignOutUrl='/' />
+              </div>
             </SignedIn>
           </div>
         </div>

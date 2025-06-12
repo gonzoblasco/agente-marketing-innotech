@@ -7,11 +7,13 @@ import {
   upsertUser,
   getOrCreateConversation,
   getConversationMessages,
+  getUserStats,
 } from '../../lib/supabase';
 
 export default function ChatInterface({ agent }) {
   const { user } = useUser();
   const [messages, setMessages] = useState([]);
+  const [messagesRemaining, setMessagesRemaining] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
@@ -63,6 +65,13 @@ export default function ChatInterface({ agent }) {
           ]);
         }
       }
+
+      const userStats = await getUserStats(user.id);
+      if (userStats) {
+        setMessagesRemaining(
+          userStats.messages_limit - userStats.messages_used
+        );
+      }
     } catch (error) {
       console.error('Error loading conversation:', error);
       // Fallback al mensaje de bienvenida
@@ -112,6 +121,8 @@ export default function ChatInterface({ agent }) {
         ...updatedMessages,
         { role: 'assistant', content: data.message },
       ]);
+
+      setMessagesRemaining((prev) => Math.max(0, (prev || 100) - 1));
     } catch (error) {
       console.error('Error:', error);
 
@@ -178,6 +189,9 @@ export default function ChatInterface({ agent }) {
           <div>
             <h3 className='font-semibold'>{agent.name}</h3>
             <p className='text-white/80 text-sm'>{agent.title}</p>
+            <p className='text-white/60 text-xs mt-1'>
+              Mensajes restantes: {messagesRemaining || '...'}
+            </p>
           </div>
         </div>
       </div>
