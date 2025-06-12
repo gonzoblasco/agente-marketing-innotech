@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useState, useEffect } from 'react';
-import { isUserAdmin } from '../../lib/supabase';
+import { isUserAdmin } from '../lib/supabase';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 

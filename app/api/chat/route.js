@@ -8,7 +8,7 @@ import {
   saveMessage,
   incrementUserMessageCount,
   getUserStats,
-} from '../../../lib/supabase';
+} from '../../lib/supabase';
 
 export async function POST(request) {
   try {
@@ -21,10 +21,19 @@ export async function POST(request) {
 
     const { messages, agentId } = await request.json();
 
-    // Obtener configuración del agente
-    const agent = getAgent(agentId || 'marketing-digital');
+    // Obtener configuración del agente desde BD
+    const agent = await getAgent(agentId || 'marketing-digital');
 
-    console.log(`🤖 Usuario ${user.id} usando agente: ${agent.name}`);
+    if (!agent) {
+      return NextResponse.json(
+        { error: 'Agente no encontrado o inactivo' },
+        { status: 404 }
+      );
+    }
+
+    console.log(
+      `🤖 Usuario ${user.id} usando agente: ${agent.name} (${agent.id})`
+    );
 
     // Asegurar que el usuario existe en nuestra BD
     await upsertUser(user);
@@ -35,7 +44,7 @@ export async function POST(request) {
       return NextResponse.json(
         {
           error:
-            'Límite de mensajes alcanzado. Actualizá tu plan para continuar.',
+            'Límite de mensajes alcanzado. Actualiza tu plan para continuar.',
         },
         { status: 429 }
       );
@@ -57,7 +66,7 @@ export async function POST(request) {
     // Guardar mensaje del usuario
     await saveMessage(conversation.id, 'user', lastMessage.content);
 
-    // Construir historial para Claude
+    // Construir historial para Claude usando el system_prompt de BD
     const conversationHistory = messages
       .map(
         (msg) =>
@@ -65,7 +74,7 @@ export async function POST(request) {
       )
       .join('\n\n');
 
-    const prompt = `${agent.systemPrompt}
+    const prompt = `${agent.system_prompt}
 
 HISTORIAL DE CONVERSACIÓN:
 ${conversationHistory}

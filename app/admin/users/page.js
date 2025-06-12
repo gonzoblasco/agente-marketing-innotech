@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllUsers, updateUser } from '../../../lib/supabase';
+import { getAllUsers, updateUser } from '../../lib/supabase';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);

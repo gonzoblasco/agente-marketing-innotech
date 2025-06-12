@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllUsers, supabase } from '../../lib/supabase';
+import { getAllUsers, supabase } from '../lib/supabase';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({

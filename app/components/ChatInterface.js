@@ -8,7 +8,7 @@ import {
   getOrCreateConversation,
   getConversationMessages,
   getUserStats,
-} from '../../lib/supabase';
+} from '../lib/supabase';
 
 export default function ChatInterface({ agent }) {
   const { user } = useUser();
@@ -38,47 +38,72 @@ export default function ChatInterface({ agent }) {
     try {
       setIsLoadingHistory(true);
 
+      console.log('🔄 Loading conversation history');
+      console.log('👤 User:', user?.id);
+      console.log('🤖 Agent:', agent);
+
+      // Validar que tenemos agente
+      if (!agent || !agent.id) {
+        console.error('❌ Error: agent or agent.id is missing');
+        setMessages([
+          {
+            role: 'assistant',
+            content:
+              'Error: No se pudo cargar el agente. Por favor, recarga la página.',
+          },
+        ]);
+        return;
+      }
+
       // Asegurar que el usuario existe en nuestra BD
+      console.log('👤 Upserting user...');
       await upsertUser(user);
 
       // Obtener conversación
+      console.log('💬 Getting/creating conversation...');
       const conversation = await getOrCreateConversation(user.id, agent.id);
 
       if (conversation) {
+        console.log('✅ Conversation found/created:', conversation.id);
+
         // Cargar mensajes existentes
         const existingMessages = await getConversationMessages(conversation.id);
+        console.log(`📝 Found ${existingMessages.length} existing messages`);
 
         if (existingMessages.length > 0) {
           setMessages(
             existingMessages.map((msg) => ({
               role: msg.role,
-              content: msg.content,
+              content: msg.content || '[Mensaje vacío]',
             }))
           );
         } else {
           // Si no hay mensajes, mostrar mensaje de bienvenida
+          console.log('💬 No existing messages, showing welcome message');
           setMessages([
             {
               role: 'assistant',
-              content: agent.welcomeMessage,
+              content: agent.welcome_message || 'Hola, ¿en qué puedo ayudarte?',
             },
           ]);
         }
-      }
-
-      const userStats = await getUserStats(user.id);
-      if (userStats) {
-        setMessagesRemaining(
-          userStats.messages_limit - userStats.messages_used
-        );
+      } else {
+        console.log('❌ Could not create/get conversation, using fallback');
+        // Fallback si no se puede crear conversación
+        setMessages([
+          {
+            role: 'assistant',
+            content: agent.welcome_message || 'Hola, ¿en qué puedo ayudarte?',
+          },
+        ]);
       }
     } catch (error) {
-      console.error('Error loading conversation:', error);
+      console.error('💥 Error loading conversation:', error);
       // Fallback al mensaje de bienvenida
       setMessages([
         {
           role: 'assistant',
-          content: agent.welcomeMessage,
+          content: agent.welcome_message || 'Error al cargar conversación',
         },
       ]);
     } finally {
@@ -119,7 +144,7 @@ export default function ChatInterface({ agent }) {
 
       setMessages([
         ...updatedMessages,
-        { role: 'assistant', content: data.message },
+        { role: 'assistant', content: data.message || 'Respuesta vacía' }, // ⭐ Fallback
       ]);
 
       setMessagesRemaining((prev) => Math.max(0, (prev || 100) - 1));
@@ -138,7 +163,7 @@ export default function ChatInterface({ agent }) {
         ...updatedMessages,
         {
           role: 'assistant',
-          content: errorMessage,
+          content: errorMessage || 'Error desconocido', // ⭐ Fallback,
         },
       ]);
     }

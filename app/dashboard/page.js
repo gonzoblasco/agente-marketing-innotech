@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useState, useEffect } from 'react';
-import { getUserStats, supabase } from '../../lib/supabase';
+import { getUserStats, supabase } from '../lib/supabase';
 import Link from 'next/link';
 
 export default function Dashboard() {

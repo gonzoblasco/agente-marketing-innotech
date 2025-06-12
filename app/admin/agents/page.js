@@ -7,7 +7,8 @@ import {
   updateAgent,
   deleteAgent,
   toggleAgentStatus,
-} from '../../../lib/supabase';
+} from '../../lib/supabase';
+import { invalidateAgentsCache } from '../../data/agents';
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState([]);
@@ -37,6 +38,7 @@ export default function AgentsPage() {
       if (newAgent) {
         setAgents([newAgent, ...agents]);
         setCreatingAgent(false);
+        invalidateAgentsCache(); // ⭐ AGREGAR ESTA LÍNEA
       }
     } catch (error) {
       console.error('Error creating agent:', error);
@@ -52,6 +54,7 @@ export default function AgentsPage() {
           agents.map((agent) => (agent.id === agentId ? updatedAgent : agent))
         );
         setEditingAgent(null);
+        invalidateAgentsCache(); // ⭐ AGREGAR ESTA LÍNEA
       }
     } catch (error) {
       console.error('Error updating agent:', error);
