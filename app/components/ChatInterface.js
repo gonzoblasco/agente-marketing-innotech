@@ -8,6 +8,7 @@ import {
   getOrCreateConversation,
   getConversationMessages,
   getUserStats,
+  deleteConversationMessages,
 } from '../lib/supabase';
 
 export default function ChatInterface({ agent }) {
@@ -17,6 +18,8 @@ export default function ChatInterface({ agent }) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -126,6 +129,53 @@ export default function ChatInterface({ agent }) {
     }
   };
 
+  const resetConversation = async () => {
+    try {
+      setIsResetting(true);
+      setShowResetModal(false);
+
+      console.log('🔄 Reseteando conversación...');
+
+      // Obtener conversación actual
+      const conversation = await getOrCreateConversation(user.id, agentId);
+
+      if (conversation) {
+        // Eliminar todos los mensajes de la conversación
+        const success = await deleteConversationMessages(conversation.id);
+
+        if (success) {
+          console.log('✅ Mensajes eliminados de la BD');
+        } else {
+          console.warn('⚠️ Error eliminando mensajes, continuando...');
+        }
+      }
+
+      // Resetear el estado local
+      setMessages([
+        {
+          role: 'assistant',
+          content: welcomeMessage,
+        },
+      ]);
+
+      setInputMessage('');
+
+      console.log('✅ Conversación reseteada exitosamente');
+    } catch (error) {
+      console.error('❌ Error reseteando conversación:', error);
+      // Fallback: resetear solo localmente
+      setMessages([
+        {
+          role: 'assistant',
+          content: welcomeMessage,
+        },
+      ]);
+      setInputMessage('');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -206,7 +256,7 @@ export default function ChatInterface({ agent }) {
 
   return (
     <div className='flex flex-col h-full bg-white'>
-      {/* Header minimalista */}
+      {/* Header con botón de reset */}
       <div className='flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3'>
         <div className='flex items-center justify-between max-w-4xl mx-auto'>
           <div className='flex items-center space-x-3'>
@@ -220,6 +270,38 @@ export default function ChatInterface({ agent }) {
               </p>
             </div>
           </div>
+
+          {/* Botón de reset */}
+          <button
+            onClick={() => setShowResetModal(true)}
+            disabled={isResetting}
+            className='flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            title='Resetear conversación'
+          >
+            {isResetting ? (
+              <>
+                <div className='w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin'></div>
+                <span>Reseteando...</span>
+              </>
+            ) : (
+              <>
+                <svg
+                  className='w-4 h-4'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                  />
+                </svg>
+                <span>Nueva conversación</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -338,6 +420,54 @@ export default function ChatInterface({ agent }) {
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación de reset */}
+      {showResetModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+          <div className='bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl'>
+            <div className='text-center'>
+              <div className='w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <svg
+                  className='w-6 h-6 text-red-600'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                  />
+                </svg>
+              </div>
+
+              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                ¿Resetear conversación?
+              </h3>
+              <p className='text-gray-600 mb-6'>
+                Se eliminará todo el historial de chat y empezarás una nueva
+                conversación desde cero.
+              </p>
+
+              <div className='flex space-x-3'>
+                <button
+                  onClick={() => setShowResetModal(false)}
+                  className='flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium'
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={resetConversation}
+                  className='flex-1 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium'
+                >
+                  Resetear
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

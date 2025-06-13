@@ -394,3 +394,26 @@ export async function toggleAgentStatus(agentId, isActive) {
     return null;
   }
 }
+
+// Eliminar todos los mensajes de una conversación
+export async function deleteConversationMessages(conversationId) {
+  try {
+    console.log('🗑️ Eliminando mensajes de conversación:', conversationId);
+
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('conversation_id', conversationId);
+
+    if (error) {
+      console.error('Error deleting messages:', error);
+      return false;
+    }
+
+    console.log('✅ Mensajes eliminados exitosamente');
+    return true;
+  } catch (err) {
+    console.error('Exception in deleteConversationMessages:', err);
+    return false;
+  }
+}
