@@ -24,8 +24,8 @@ export default function FormattedMessage({ content, isUser = false }) {
     }
 
     if (isUser) {
-      // Para mensajes del usuario, solo texto plano
-      setHtmlContent(content);
+      // Para mensajes del usuario, solo texto plano con saltos de línea
+      setHtmlContent(content.replace(/\n/g, '<br>'));
     } else {
       try {
         // Para respuestas del agente, renderizar markdown
@@ -34,7 +34,7 @@ export default function FormattedMessage({ content, isUser = false }) {
       } catch (error) {
         console.error('Error rendering markdown:', error);
         // Fallback a texto plano si hay error
-        setHtmlContent(content);
+        setHtmlContent(content.replace(/\n/g, '<br>'));
       }
     }
   }, [content, isUser]);
@@ -42,24 +42,16 @@ export default function FormattedMessage({ content, isUser = false }) {
   // Si no hay contenido, mostrar placeholder
   if (!content || typeof content !== 'string') {
     return (
-      <p className='text-sm text-gray-400 italic'>
+      <p className='text-sm opacity-60 italic'>
         {isUser ? 'Mensaje vacío' : 'Respuesta vacía'}
       </p>
     );
   }
 
-  if (isUser) {
-    return <p className='text-sm whitespace-pre-wrap'>{content}</p>;
-  }
-
   return (
     <div
-      className='text-sm markdown-content'
+      className={`markdown-content ${isUser ? 'text-white' : 'text-gray-900'}`}
       dangerouslySetInnerHTML={{ __html: htmlContent }}
-      style={{
-        // Estilos para el contenido markdown
-        lineHeight: '1.6',
-      }}
     />
   );
 }
