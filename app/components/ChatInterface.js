@@ -19,6 +19,35 @@ export default function ChatInterface({ agent }) {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const messagesEndRef = useRef(null);
 
+  // Validación de seguridad para agente
+  if (!agent) {
+    return (
+      <div className='max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center'>
+        <h2 className='text-xl font-bold text-red-600 mb-4'>
+          ⚠️ Error: Agente no disponible
+        </h2>
+        <p className='text-gray-600 mb-4'>
+          No se pudo cargar la información del agente.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700'
+        >
+          Recargar página
+        </button>
+      </div>
+    );
+  }
+
+  // Valores por defecto para evitar errores
+  const agentName = agent.name || 'Agente';
+  const agentTitle = agent.title || 'Especialista';
+  const agentEmoji = agent.emoji || '🤖';
+  const agentGradient = agent.gradient || 'from-blue-500 to-blue-700';
+  const agentId = agent.id || 'default-agent';
+  const welcomeMessage =
+    agent.welcome_message || 'Hola, ¿en qué puedo ayudarte?';
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -40,20 +69,7 @@ export default function ChatInterface({ agent }) {
 
       console.log('🔄 Loading conversation history');
       console.log('👤 User:', user?.id);
-      console.log('🤖 Agent:', agent);
-
-      // Validar que tenemos agente
-      if (!agent || !agent.id) {
-        console.error('❌ Error: agent or agent.id is missing');
-        setMessages([
-          {
-            role: 'assistant',
-            content:
-              'Error: No se pudo cargar el agente. Por favor, recarga la página.',
-          },
-        ]);
-        return;
-      }
+      console.log('🤖 Agent:', agentId);
 
       // Asegurar que el usuario existe en nuestra BD
       console.log('👤 Upserting user...');
@@ -61,7 +77,7 @@ export default function ChatInterface({ agent }) {
 
       // Obtener conversación
       console.log('💬 Getting/creating conversation...');
-      const conversation = await getOrCreateConversation(user.id, agent.id);
+      const conversation = await getOrCreateConversation(user.id, agentId);
 
       if (conversation) {
         console.log('✅ Conversation found/created:', conversation.id);
@@ -83,7 +99,7 @@ export default function ChatInterface({ agent }) {
           setMessages([
             {
               role: 'assistant',
-              content: agent.welcome_message || 'Hola, ¿en qué puedo ayudarte?',
+              content: welcomeMessage,
             },
           ]);
         }
@@ -93,7 +109,7 @@ export default function ChatInterface({ agent }) {
         setMessages([
           {
             role: 'assistant',
-            content: agent.welcome_message || 'Hola, ¿en qué puedo ayudarte?',
+            content: welcomeMessage,
           },
         ]);
       }
@@ -103,7 +119,7 @@ export default function ChatInterface({ agent }) {
       setMessages([
         {
           role: 'assistant',
-          content: agent.welcome_message || 'Error al cargar conversación',
+          content: welcomeMessage,
         },
       ]);
     } finally {
@@ -129,7 +145,7 @@ export default function ChatInterface({ agent }) {
         },
         body: JSON.stringify({
           messages: updatedMessages,
-          agentId: agent.id,
+          agentId: agentId,
         }),
       });
 
@@ -144,7 +160,7 @@ export default function ChatInterface({ agent }) {
 
       setMessages([
         ...updatedMessages,
-        { role: 'assistant', content: data.message || 'Respuesta vacía' }, // ⭐ Fallback
+        { role: 'assistant', content: data.message || 'Respuesta vacía' },
       ]);
 
       setMessagesRemaining((prev) => Math.max(0, (prev || 100) - 1));
@@ -163,7 +179,7 @@ export default function ChatInterface({ agent }) {
         ...updatedMessages,
         {
           role: 'assistant',
-          content: errorMessage || 'Error desconocido', // ⭐ Fallback,
+          content: errorMessage,
         },
       ]);
     }
@@ -181,14 +197,14 @@ export default function ChatInterface({ agent }) {
   if (isLoadingHistory) {
     return (
       <div className='max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden'>
-        <div className={`bg-gradient-to-r ${agent.gradient} text-white p-4`}>
+        <div className={`bg-gradient-to-r ${agentGradient} text-white p-4`}>
           <div className='flex items-center'>
             <div className='w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3'>
-              {agent.emoji}
+              {agentEmoji}
             </div>
             <div>
-              <h3 className='font-semibold'>{agent.name}</h3>
-              <p className='text-white/80 text-sm'>{agent.title}</p>
+              <h3 className='font-semibold'>{agentName}</h3>
+              <p className='text-white/80 text-sm'>{agentTitle}</p>
             </div>
           </div>
         </div>
@@ -206,14 +222,14 @@ export default function ChatInterface({ agent }) {
   return (
     <div className='max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden'>
       {/* Header del chat */}
-      <div className={`bg-gradient-to-r ${agent.gradient} text-white p-4`}>
+      <div className={`bg-gradient-to-r ${agentGradient} text-white p-4`}>
         <div className='flex items-center'>
           <div className='w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3'>
-            {agent.emoji}
+            {agentEmoji}
           </div>
           <div>
-            <h3 className='font-semibold'>{agent.name}</h3>
-            <p className='text-white/80 text-sm'>{agent.title}</p>
+            <h3 className='font-semibold'>{agentName}</h3>
+            <p className='text-white/80 text-sm'>{agentTitle}</p>
             <p className='text-white/60 text-xs mt-1'>
               Mensajes restantes: {messagesRemaining || '...'}
             </p>
@@ -233,7 +249,7 @@ export default function ChatInterface({ agent }) {
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.role === 'user'
-                  ? `bg-gradient-to-r ${agent.gradient} text-white`
+                  ? `bg-gradient-to-r ${agentGradient} text-white`
                   : 'bg-white text-gray-800 shadow border'
               }`}
             >
@@ -281,7 +297,7 @@ export default function ChatInterface({ agent }) {
           <button
             onClick={sendMessage}
             disabled={isLoading || !inputMessage.trim()}
-            className={`bg-gradient-to-r ${agent.gradient} text-white px-6 py-3 rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-medium`}
+            className={`bg-gradient-to-r ${agentGradient} text-white px-6 py-3 rounded-lg hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-medium`}
           >
             {isLoading ? (
               <div className='flex items-center'>

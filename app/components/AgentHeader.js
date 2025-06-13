@@ -3,6 +3,29 @@
 import Link from 'next/link';
 
 export default function AgentHeader({ agent }) {
+  // Validación de seguridad
+  if (!agent) {
+    console.warn('⚠️ AgentHeader: No agent provided');
+    return (
+      <div className='mb-8'>
+        <p className='text-red-500'>
+          Error: No se pudo cargar la información del agente
+        </p>
+        <Link href='/' className='text-blue-600 hover:text-blue-700'>
+          ← Volver a la galería
+        </Link>
+      </div>
+    );
+  }
+
+  // Valores por defecto para evitar errores
+  const agentName = agent.name || 'Agente';
+  const agentTitle = agent.title || 'Especialista';
+  const agentDescription =
+    agent.description || 'Agente conversacional especializado';
+  const agentEmoji = agent.emoji || '🤖';
+  const agentGradient = agent.gradient || 'from-blue-500 to-blue-700';
+
   return (
     <div className='mb-8'>
       {/* Breadcrumb */}
@@ -11,21 +34,21 @@ export default function AgentHeader({ agent }) {
           🏠 Galería de Agentes
         </Link>
         <span className='mx-2'>•</span>
-        <span className='text-gray-700'>{agent.name}</span>
+        <span className='text-gray-700'>{agentName}</span>
       </div>
 
       {/* Header del agente */}
       <div
-        className={`bg-gradient-to-r ${agent.gradient} text-white rounded-xl p-6 shadow-lg`}
+        className={`bg-gradient-to-r ${agentGradient} text-white rounded-xl p-6 shadow-lg`}
       >
         <div className='flex items-center justify-between'>
           <div className='flex items-center'>
-            <div className='text-4xl mr-4'>{agent.emoji}</div>
+            <div className='text-4xl mr-4'>{agentEmoji}</div>
             <div>
-              <h1 className='text-3xl font-bold mb-1'>{agent.name}</h1>
-              <p className='text-lg opacity-90'>{agent.title}</p>
+              <h1 className='text-3xl font-bold mb-1'>{agentName}</h1>
+              <p className='text-lg opacity-90'>{agentTitle}</p>
               <p className='text-sm opacity-75 mt-2 max-w-2xl'>
-                {agent.description}
+                {agentDescription}
               </p>
             </div>
           </div>

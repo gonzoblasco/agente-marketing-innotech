@@ -4,12 +4,20 @@ import AgentHeader from '../../components/AgentHeader';
 import { notFound } from 'next/navigation';
 
 export default async function ChatPage({ params }) {
-  // ⭐ CAMBIO: Await params antes de usarlos
-  const { agentId } = await params;
-  const agent = getAgent(agentId);
+  // ⭐ CAMBIO CRÍTICO: En Next.js 15, params es una Promesa
+  const resolvedParams = await params;
+  const { agentId } = resolvedParams;
 
-  // Si el agente no existe, mostrar 404
-  if (!agent && agentId !== 'marketing-digital') {
+  console.log('🔍 ChatPage - agentId:', agentId);
+
+  // Obtener agente desde BD o fallback
+  const agent = await getAgent(agentId);
+
+  console.log('🤖 ChatPage - agent loaded:', agent?.name || 'No agent');
+
+  // Si no se encuentra el agente, mostrar 404
+  if (!agent) {
+    console.error('❌ ChatPage - Agent not found:', agentId);
     notFound();
   }
 
@@ -24,11 +32,21 @@ export default async function ChatPage({ params }) {
 }
 
 export async function generateMetadata({ params }) {
-  const { agentId } = await params;
-  const agent = getAgent(agentId);
+  // ⭐ CAMBIO CRÍTICO: También await params aquí
+  const resolvedParams = await params;
+  const { agentId } = resolvedParams;
+
+  const agent = await getAgent(agentId);
+
+  if (!agent) {
+    return {
+      title: 'Agente no encontrado',
+      description: 'El agente solicitado no existe.',
+    };
+  }
 
   return {
-    title: agent.name, // ← Solo el nombre del agente
+    title: agent.name,
     description: agent.description,
   };
 }
