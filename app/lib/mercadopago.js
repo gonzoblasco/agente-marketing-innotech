@@ -22,12 +22,6 @@ console.log('🎯 Selected Token:', {
   tokenPrefix: accessToken?.substring(0, 10),
 });
 
-// Debug de credenciales
-const accessToken2 =
-  process.env.NODE_ENV === 'production'
-    ? process.env.MP_ACCESS_TOKEN_PROD
-    : process.env.MP_ACCESS_TOKEN_SANDBOX;
-
 console.log('🔧 MP Debug:', {
   nodeEnv: process.env.NODE_ENV,
   hasAccessToken: !!accessToken,
