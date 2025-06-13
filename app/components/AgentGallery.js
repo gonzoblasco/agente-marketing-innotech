@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useUser, SignInButton } from '@clerk/nextjs';
 import { getAgentsByCategory, getUniqueCategories } from '../lib/supabase';
 import { getCategoryStyles } from '../lib/categories';
+import AgentCard from './AgentCard';
 import Link from 'next/link';
 
 export default function AgentGallery() {
   const { isSignedIn, user } = useUser();
   const [agents, setAgents] = useState([]);
+  const [allAgents, setAllAgents] = useState([]); // ⭐ NUEVO: Guardar todos los agentes
   const [categories, setCategories] = useState(['Todas']);
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [loading, setLoading] = useState(true);
@@ -29,12 +31,29 @@ export default function AgentGallery() {
 
       console.log('🔄 Loading categories and agents...');
 
-      // Cargar categorías únicas
-      const uniqueCategories = await getUniqueCategories();
+      // ⭐ CAMBIO: Cargar TODOS los agentes una sola vez
+      const allAgentsData = await getAgentsByCategory(null); // null = todos
+
+      // ⭐ NUEVO: Ordenar alfabéticamente por nombre
+      const sortedAgents = (allAgentsData || []).sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '', 'es', {
+          sensitivity: 'base',
+        })
+      );
+
+      setAllAgents(sortedAgents);
+
+      // Obtener categorías únicas de todos los agentes
+      const uniqueCategories = [
+        ...new Set(
+          sortedAgents.map((agent) => agent.category || 'Sin Categoría')
+        ),
+      ].sort();
+
       setCategories(['Todas', ...uniqueCategories]);
 
-      // Cargar agentes iniciales
-      await loadAgents();
+      // Cargar agentes iniciales (todos, ya ordenados)
+      setAgents(sortedAgents);
     } catch (error) {
       console.error('💥 Exception loading data:', error);
       setError('Error al cargar datos');
@@ -47,12 +66,28 @@ export default function AgentGallery() {
     try {
       console.log(`🔄 Loading agents for category: ${selectedCategory}`);
 
-      const agentsData = await getAgentsByCategory(
-        selectedCategory === 'Todas' ? null : selectedCategory
+      // ⭐ CAMBIO: Filtrar localmente en lugar de hacer nueva consulta
+      let filteredAgents;
+      if (selectedCategory === 'Todas') {
+        filteredAgents = allAgents;
+      } else {
+        filteredAgents = allAgents.filter(
+          (agent) => agent.category === selectedCategory
+        );
+      }
+
+      // ⭐ NUEVO: Ordenar alfabéticamente los agentes filtrados también
+      const sortedFilteredAgents = filteredAgents.sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '', 'es', {
+          sensitivity: 'base',
+        })
       );
 
-      console.log(`✅ Loaded ${agentsData?.length || 0} agents:`, agentsData);
-      setAgents(agentsData || []);
+      setAgents(sortedFilteredAgents);
+
+      console.log(
+        `✅ Showing ${sortedFilteredAgents.length} agents for category: ${selectedCategory}`
+      );
     } catch (error) {
       console.error('💥 Exception loading agents:', error);
       setError('Error al cargar agentes');
@@ -63,8 +98,16 @@ export default function AgentGallery() {
     setSelectedCategory(category);
   };
 
+  // ⭐ CAMBIO: Función para contar agentes por categoría usando allAgents
+  const getAgentCountForCategory = (category) => {
+    if (category === 'Todas') {
+      return allAgents.length;
+    }
+    return allAgents.filter((agent) => agent.category === category).length;
+  };
+
   const getAgentStats = () => {
-    const totalAgents = agents.length;
+    const totalAgents = allAgents.length; // ⭐ CAMBIO: Usar allAgents
     const categoriesCount = categories.length - 1; // Excluir "Todas"
     return { totalAgents, categoriesCount };
   };
@@ -154,6 +197,9 @@ export default function AgentGallery() {
             const categoryStyles =
               category !== 'Todas' ? getCategoryStyles(category) : null;
 
+            // ⭐ CAMBIO: Usar función que cuenta desde allAgents
+            const agentCount = getAgentCountForCategory(category);
+
             return (
               <button
                 key={category}
@@ -162,7 +208,7 @@ export default function AgentGallery() {
                   isSelected
                     ? category === 'Todas'
                       ? 'bg-blue-600 text-white'
-                      : `${categoryStyles?.bgClass} ${categoryStyles?.textClass} ring-2 ${categoryStyles?.borderClass}`
+                      : `bg-gradient-to-r ${categoryStyles?.gradient} text-white ring-2 ring-white/20`
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -173,11 +219,8 @@ export default function AgentGallery() {
                     {categoryStyles?.icon} {category}
                   </>
                 )}
-                {category !== 'Todas' && (
-                  <span className='ml-1 text-xs opacity-75'>
-                    ({agents.filter((a) => a.category === category).length})
-                  </span>
-                )}
+                {/* ⭐ CAMBIO: Mostrar contador siempre, incluso para "Todas" */}
+                <span className='ml-1 text-xs opacity-75'>({agentCount})</span>
               </button>
             );
           })}
