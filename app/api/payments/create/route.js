@@ -6,9 +6,16 @@ import { upsertUser } from '../../../lib/supabase';
 
 export async function POST(request) {
   try {
+    // DEBUG: Verificar variables de entorno
+    console.log('🔧 Debug MP Variables:', {
+      hasAccessToken: !!process.env.MP_ACCESS_TOKEN_SANDBOX,
+      hasPublicKey: !!process.env.MP_PUBLIC_KEY_SANDBOX,
+      nodeEnv: process.env.NODE_ENV,
+      accessTokenPrefix: process.env.MP_ACCESS_TOKEN_SANDBOX?.substring(0, 10),
+    });
+
     // Verificar autenticación
     const user = await currentUser();
-
     if (!user) {
       return NextResponse.json(
         { error: 'Usuario no autenticado' },
@@ -28,7 +35,7 @@ export async function POST(request) {
     // Asegurar que el usuario existe en nuestra BD
     await upsertUser(user);
 
-    // ⭐ FIX: Verificar si MercadoPago está configurado
+    // ⭐ CAMBIO TEMPORAL: Mostrar error específico
     try {
       // Crear preferencia de MercadoPago
       const preference = await createPaymentPreference(
@@ -46,39 +53,32 @@ export async function POST(request) {
         plan: PLANS[planId],
       });
     } catch (mpError) {
-      // Si MercadoPago no está configurado, devolver error amigable
-      if (mpError.message.includes('MercadoPago no está configurado')) {
-        return NextResponse.json(
-          {
-            error: 'Pagos temporalmente deshabilitados',
-            message:
-              'El sistema de pagos está en mantenimiento. Intentá más tarde.',
-            debug:
-              process.env.NODE_ENV === 'development'
-                ? mpError.message
-                : undefined,
-          },
-          { status: 503 } // Service Unavailable
-        );
-      }
+      // ⭐ LOG DETALLADO DEL ERROR
+      console.error('❌ Error específico de MercadoPago:', {
+        message: mpError.message,
+        stack: mpError.stack,
+        name: mpError.name,
+      });
 
-      // Re-lanzar otros errores
-      throw mpError;
+      return NextResponse.json(
+        {
+          error: 'Error de configuración de MercadoPago',
+          details: mpError.message,
+          debug: {
+            hasAccessToken: !!process.env.MP_ACCESS_TOKEN_SANDBOX,
+            hasPublicKey: !!process.env.MP_PUBLIC_KEY_SANDBOX,
+            nodeEnv: process.env.NODE_ENV,
+          },
+        },
+        { status: 500 }
+      );
     }
   } catch (error) {
-    console.error('❌ Error creando pago:', error);
-    console.error('❌ Error stack:', error.stack);
-    console.error('❌ Error details:', {
-      message: error.message,
-      name: error.name,
-      cause: error.cause,
-    });
-
+    console.error('❌ Error general:', error);
     return NextResponse.json(
       {
-        error: 'Error creando pago',
+        error: 'Error interno del servidor',
         details: error.message,
-        debug: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
       { status: 500 }
     );

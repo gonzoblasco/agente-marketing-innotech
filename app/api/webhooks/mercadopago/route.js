@@ -2,6 +2,13 @@
 import { NextResponse } from 'next/server';
 import { updateUser, supabase } from '../../../lib/supabase';
 
+// Validar signature de MercadoPago (opcional pero recomendado)
+function validateMPSignature(body, signature) {
+  // Por ahora lo saltamos para simplicidad
+  // En producción real deberías validar la signature
+  return true;
+}
+
 export async function POST(request) {
   try {
     console.log('🔔 Webhook MercadoPago recibido');
@@ -55,7 +62,7 @@ export async function POST(request) {
     }
 
     // Extraer información del external_reference
-    // Formato: userId_planId_timestamp
+    // Formato: userId_planId_timestamp (pero userId puede tener _)
     const externalRef = payment.external_reference;
     if (!externalRef) {
       console.log('❌ No external_reference en pago');
@@ -65,7 +72,22 @@ export async function POST(request) {
       );
     }
 
-    const [userId, planId] = externalRef.split('_');
+    // Split desde el final para manejar userIds con guiones bajos
+    const parts = externalRef.split('_');
+    if (parts.length < 3) {
+      console.log('❌ External reference mal formateado:', externalRef);
+      return NextResponse.json(
+        { error: 'Invalid external reference format' },
+        { status: 400 }
+      );
+    }
+
+    // Los últimos 2 elementos son planId y timestamp
+    const planId = parts[parts.length - 2];
+    const timestamp = parts[parts.length - 1];
+    // Todo lo anterior es el userId
+    const userId = parts.slice(0, -2).join('_');
+
     if (!userId || !planId) {
       console.log('❌ External reference mal formateado:', externalRef);
       return NextResponse.json(
