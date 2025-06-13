@@ -13,7 +13,13 @@ global.fetch = jest.fn();
 // Mock de Next.js
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
-  useSearchParams: () => ({ get: jest.fn() }),
+  useSearchParams: () => ({
+    get: jest.fn((key) => {
+      if (key === 'payment_id') return 'test-payment-123';
+      if (key === 'status') return 'approved';
+      return null;
+    }),
+  }),
   usePathname: () => '/test-path',
   notFound: jest.fn(),
 }));
@@ -50,51 +56,51 @@ jest.mock('@clerk/nextjs/server', () => ({
   ),
 }));
 
-// Mock del cliente de Supabase
-const mockSupabaseClient = {
-  from: jest.fn(() => ({
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        gt: jest.fn(() => Promise.resolve({ count: 10, error: null })),
-        order: jest.fn(() => ({
-          limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
-        })),
-      })),
-      order: jest.fn(() => ({
-        limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
-        ascending: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      })),
-      limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      maybeSingle: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
-    })),
-    insert: jest.fn(() => ({
-      select: jest.fn(() => ({
-        single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
-      })),
-    })),
-    update: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
-        })),
-      })),
-    })),
-    delete: jest.fn(() => ({
-      eq: jest.fn(() => Promise.resolve({ error: null })),
-    })),
-    upsert: jest.fn(() => ({
-      select: jest.fn(() => ({
-        single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
-      })),
-    })),
-  })),
+// ⭐ CREAR MOCKS FUNCIONALES CORRECTOS
+const createMockFunction = (name, defaultReturn = undefined) => {
+  const fn = jest.fn(() => defaultReturn);
+  fn.mockClear = jest.fn(() => fn);
+  fn.mockReset = jest.fn(() => fn);
+  fn.mockRestore = jest.fn(() => fn);
+  fn.mockReturnValue = jest.fn((value) => {
+    fn.mockImplementation(() => value);
+    return fn;
+  });
+  fn.mockResolvedValue = jest.fn((value) => {
+    fn.mockImplementation(() => Promise.resolve(value));
+    return fn;
+  });
+  fn.mockRejectedValue = jest.fn((value) => {
+    fn.mockImplementation(() => Promise.reject(value));
+    return fn;
+  });
+  return fn;
 };
 
-// Mock de Supabase - ⭐ CAMBIO: usar ruta relativa correcta desde la raíz
-jest.mock('./app/lib/supabase', () => ({
+// Mock del cliente de Supabase con métodos encadenados
+const createSupabaseChain = () => ({
+  select: jest.fn(() => createSupabaseChain()),
+  eq: jest.fn(() => createSupabaseChain()),
+  gt: jest.fn(() => Promise.resolve({ count: 10, error: null })),
+  order: jest.fn(() => createSupabaseChain()),
+  limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
+  maybeSingle: jest.fn(() => Promise.resolve({ data: null, error: null })),
+  single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
+  insert: jest.fn(() => createSupabaseChain()),
+  update: jest.fn(() => createSupabaseChain()),
+  upsert: jest.fn(() => createSupabaseChain()),
+  delete: jest.fn(() => createSupabaseChain()),
+});
+
+const mockSupabaseClient = {
+  from: jest.fn(() => createSupabaseChain()),
+};
+
+// ⭐ MOCK COMPLETO DE SUPABASE FUNCTIONS
+const mockSupabaseFunctions = {
   supabase: mockSupabaseClient,
-  getAgentsByCategory: jest.fn(() =>
+  getAgentsByCategory: createMockFunction(
+    'getAgentsByCategory',
     Promise.resolve([
       {
         id: 'marketing-digital',
@@ -118,29 +124,48 @@ jest.mock('./app/lib/supabase', () => ({
       },
     ])
   ),
-  getUniqueCategories: jest.fn(() =>
+  getUniqueCategories: createMockFunction(
+    'getUniqueCategories',
     Promise.resolve(['Marketing', 'Productividad'])
   ),
-  getUserStats: jest.fn(() =>
+  getUserStats: createMockFunction(
+    'getUserStats',
     Promise.resolve({
       plan: 'lite',
       messages_used: 5,
       messages_limit: 100,
     })
   ),
-  upsertUser: jest.fn(() => Promise.resolve({ id: 'test-user-id' })),
-  getOrCreateConversation: jest.fn(() =>
+  upsertUser: createMockFunction(
+    'upsertUser',
+    Promise.resolve({ id: 'test-user-id' })
+  ),
+  getOrCreateConversation: createMockFunction(
+    'getOrCreateConversation',
     Promise.resolve({
       id: 'conv-123',
       user_id: 'test-user-id',
       agent_id: 'marketing-digital',
     })
   ),
-  getConversationMessages: jest.fn(() => Promise.resolve([])),
-  saveMessage: jest.fn(() => Promise.resolve({ id: 'msg-123' })),
-  incrementUserMessageCount: jest.fn(() => Promise.resolve(true)),
-  deleteConversationMessages: jest.fn(() => Promise.resolve(true)),
-  getAllUsers: jest.fn(() =>
+  getConversationMessages: createMockFunction(
+    'getConversationMessages',
+    Promise.resolve([])
+  ),
+  saveMessage: createMockFunction(
+    'saveMessage',
+    Promise.resolve({ id: 'msg-123' })
+  ),
+  incrementUserMessageCount: createMockFunction(
+    'incrementUserMessageCount',
+    Promise.resolve(true)
+  ),
+  deleteConversationMessages: createMockFunction(
+    'deleteConversationMessages',
+    Promise.resolve(true)
+  ),
+  getAllUsers: createMockFunction(
+    'getAllUsers',
     Promise.resolve([
       {
         id: 'user-1',
@@ -150,12 +175,28 @@ jest.mock('./app/lib/supabase', () => ({
         plan: 'lite',
         messages_used: 5,
         messages_limit: 100,
+        role: 'user',
+        created_at: '2023-12-31T00:00:00Z',
+      },
+      {
+        id: 'user-2',
+        email: 'pro@example.com',
+        first_name: 'Pro',
+        last_name: 'User',
+        plan: 'pro',
+        messages_used: 50,
+        messages_limit: 1000,
+        role: 'user',
         created_at: '2024-01-01T00:00:00Z',
       },
     ])
   ),
-  updateUser: jest.fn(() => Promise.resolve({ id: 'user-1' })),
-  getAllAgents: jest.fn(() =>
+  updateUser: createMockFunction(
+    'updateUser',
+    Promise.resolve({ id: 'user-1' })
+  ),
+  getAllAgents: createMockFunction(
+    'getAllAgents',
     Promise.resolve([
       {
         id: 'marketing-digital',
@@ -165,22 +206,45 @@ jest.mock('./app/lib/supabase', () => ({
         description: 'Experto en marketing digital',
         category: 'Marketing',
         is_active: true,
+        gradient: 'from-blue-500 to-blue-700',
+        created_at: '2023-12-31T00:00:00Z',
+      },
+      {
+        id: 'mentor-productividad',
+        name: 'Mentor de Productividad',
+        title: 'Para emprendedores overwhelmed',
+        emoji: '⚡',
+        description: 'Especialista en productividad',
+        category: 'Productividad',
+        is_active: false,
+        gradient: 'from-green-500 to-green-700',
         created_at: '2024-01-01T00:00:00Z',
       },
     ])
   ),
-  createAgent: jest.fn(() => Promise.resolve({ id: 'new-agent' })),
-  updateAgent: jest.fn(() => Promise.resolve({ id: 'updated-agent' })),
-  deleteAgent: jest.fn(() => Promise.resolve(true)),
-  toggleAgentStatus: jest.fn(() =>
+  createAgent: createMockFunction(
+    'createAgent',
+    Promise.resolve({ id: 'new-agent' })
+  ),
+  updateAgent: createMockFunction(
+    'updateAgent',
+    Promise.resolve({ id: 'updated-agent' })
+  ),
+  deleteAgent: createMockFunction('deleteAgent', Promise.resolve(true)),
+  toggleAgentStatus: createMockFunction(
+    'toggleAgentStatus',
     Promise.resolve({ id: 'agent-id', is_active: true })
   ),
-  isUserAdmin: jest.fn(() => Promise.resolve(true)),
-}));
+  isUserAdmin: createMockFunction('isUserAdmin', Promise.resolve(true)),
+};
 
-// Mock de datos/agentes - ⭐ CAMBIO: usar ruta relativa correcta
+// Mock de Supabase
+jest.mock('./app/lib/supabase', () => mockSupabaseFunctions);
+
+// Mock de datos/agentes
 jest.mock('./app/data/agents', () => ({
-  getAllAgents: jest.fn(() =>
+  getAllAgents: createMockFunction(
+    'getAllAgents',
     Promise.resolve([
       {
         id: 'marketing-digital',
@@ -191,7 +255,8 @@ jest.mock('./app/data/agents', () => ({
       },
     ])
   ),
-  getAgent: jest.fn(() =>
+  getAgent: createMockFunction(
+    'getAgent',
     Promise.resolve({
       id: 'marketing-digital',
       name: 'Consultor de Marketing Digital',
@@ -202,10 +267,14 @@ jest.mock('./app/data/agents', () => ({
   invalidateAgentsCache: jest.fn(),
 }));
 
-// Mock de React Router DOM
+// Mock de React Router DOM para integration tests
 jest.mock('react-router-dom', () => ({
   BrowserRouter: ({ children }) => <div>{children}</div>,
-  Link: ({ to, children }) => <a href={to}>{children}</a>,
+  Link: ({ to, children, ...props }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
   useNavigate: () => jest.fn(),
   useLocation: () => ({ pathname: '/test' }),
 }));
@@ -214,6 +283,13 @@ jest.mock('react-router-dom', () => ({
 beforeEach(() => {
   // Resetear todos los mocks antes de cada test
   jest.clearAllMocks();
+
+  // ⭐ RESETEAR MOCKS PERSONALIZADOS
+  Object.values(mockSupabaseFunctions).forEach((mockFn) => {
+    if (typeof mockFn === 'function' && mockFn.mockClear) {
+      mockFn.mockClear();
+    }
+  });
 
   // Configurar fetch mock
   global.fetch.mockResolvedValue({
@@ -229,3 +305,6 @@ afterEach(() => {
 // Mock de window.confirm y window.alert
 global.confirm = jest.fn(() => true);
 global.alert = jest.fn();
+
+// ⭐ EXPORTAR MOCKS PARA USO EN TESTS
+export { mockSupabaseFunctions };

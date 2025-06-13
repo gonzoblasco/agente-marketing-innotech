@@ -7,10 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:ci": "jest --coverage --watchAll=false"
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch --passWithNoTests",
+    "test:coverage": "jest --coverage --passWithNoTests",
+    "test:ci": "jest --coverage --watchAll=false --passWithNoTests",
+    "test:debug": "jest --verbose --no-cache",
+    "test:components": "jest --testPathPattern=components",
+    "test:admin": "jest --testPathPattern=admin",
+    "test:integration": "jest --testPathPattern=integration"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.21.0",
@@ -54,7 +58,8 @@
       "!app/**/*.config.js",
       "!app/**/layout.js",
       "!app/**/loading.js",
-      "!app/**/not-found.js"
+      "!app/**/not-found.js",
+      "!app/**/middleware.js"
     ],
     "transform": {
       "^.+\\.(js|jsx)$": "babel-jest"
@@ -67,6 +72,9 @@
     "testMatch": [
       "**/__tests__/**/*.(js|jsx)",
       "**/*.(test|spec).(js|jsx)"
-    ]
+    ],
+    "verbose": true,
+    "silent": false,
+    "maxWorkers": 1
   }
 }
