@@ -1,108 +1,96 @@
 // __tests__/admin/AdminPanel.test.js
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AdminDashboard from '../../app/admin/page';
 import UsersPage from '../../app/admin/users/page';
 import AgentsPage from '../../app/admin/agents/page';
-import {
-  getAllUsers,
-  updateUser,
-  getAllAgents,
-  createAgent,
-  updateAgent,
-  deleteAgent,
-  supabase,
-} from '../../app/lib/supabase';
 
-// Mock de datos de admin
-const mockUsers = [
-  {
-    id: 'user-1',
-    email: 'test@example.com',
-    first_name: 'Test',
-    last_name: 'User',
-    plan: 'lite',
-    messages_used: 5,
-    messages_limit: 100,
-    created_at: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: 'user-2',
-    email: 'pro@example.com',
-    first_name: 'Pro',
-    last_name: 'User',
-    plan: 'pro',
-    messages_used: 50,
-    messages_limit: 1000,
-    created_at: '2024-01-02T00:00:00Z',
-  },
-];
+// Los mocks ya están configurados en jest.setup.js
+const mockSupabase = require('../../app/lib/supabase').supabase;
+const mockAdminFunctions = require('../../app/lib/supabase');
 
-const mockAgents = [
-  {
-    id: 'marketing-digital',
-    name: 'Consultor de Marketing Digital',
-    title: 'Especialista en PyMEs argentinas',
-    emoji: '🎯',
-    description: 'Experto en marketing digital',
-    category: 'Marketing',
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: 'mentor-productividad',
-    name: 'Mentor de Productividad',
-    title: 'Para emprendedores overwhelmed',
-    emoji: '⚡',
-    description: 'Especialista en productividad',
-    category: 'Productividad',
-    is_active: false,
-    created_at: '2024-01-02T00:00:00Z',
-  },
-];
+// Wrapper para act
+const renderWithAct = async (component) => {
+  let result;
+  await act(async () => {
+    result = render(component);
+  });
+  return result;
+};
 
 describe('Admin Panel', () => {
   beforeEach(() => {
-    // Reset mocks
     jest.clearAllMocks();
 
-    // Mock Supabase count queries
-    supabase.from.mockImplementation((table) => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          gt: jest.fn(() => Promise.resolve({ count: 10, error: null })),
-        })),
-      })),
+    // Mock Supabase count queries con estructura correcta
+    mockSupabase.from.mockImplementation((table) => ({
+      select: jest.fn(() => {
+        if (table === 'users') {
+          return Promise.resolve({ count: 25, error: null });
+        }
+        if (table === 'conversations') {
+          return Promise.resolve({ count: 150, error: null });
+        }
+        if (table === 'messages') {
+          return Promise.resolve({ count: 1200, error: null });
+        }
+        return Promise.resolve({ count: 15, error: null });
+      }),
     }));
+
+    // Configurar datos de ejemplo actualizados
+    mockAdminFunctions.getAllUsers.mockResolvedValue([
+      {
+        id: 'user-1',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        plan: 'lite',
+        messages_used: 5,
+        messages_limit: 100,
+        created_at: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'user-2',
+        email: 'pro@example.com',
+        first_name: 'Pro',
+        last_name: 'User',
+        plan: 'pro',
+        messages_used: 50,
+        messages_limit: 1000,
+        created_at: '2024-01-02T00:00:00Z',
+      },
+    ]);
+
+    mockAdminFunctions.getAllAgents.mockResolvedValue([
+      {
+        id: 'marketing-digital',
+        name: 'Consultor de Marketing Digital',
+        title: 'Especialista en PyMEs argentinas',
+        emoji: '🎯',
+        description: 'Experto en marketing digital',
+        category: 'Marketing',
+        is_active: true,
+        gradient: 'from-blue-500 to-blue-700',
+        created_at: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'mentor-productividad',
+        name: 'Mentor de Productividad',
+        title: 'Para emprendedores overwhelmed',
+        emoji: '⚡',
+        description: 'Especialista en productividad',
+        category: 'Productividad',
+        is_active: false,
+        gradient: 'from-green-500 to-green-700',
+        created_at: '2024-01-02T00:00:00Z',
+      },
+    ]);
   });
 
   describe('AdminDashboard', () => {
     test('carga y muestra estadísticas del dashboard', async () => {
-      // Mock de estadísticas
-      supabase.from.mockImplementation((table) => {
-        if (table === 'users') {
-          return {
-            select: jest.fn(() => Promise.resolve({ count: 25, error: null })),
-          };
-        }
-        if (table === 'conversations') {
-          return {
-            select: jest.fn(() => Promise.resolve({ count: 150, error: null })),
-          };
-        }
-        if (table === 'messages') {
-          return {
-            select: jest.fn(() =>
-              Promise.resolve({ count: 1200, error: null })
-            ),
-          };
-        }
-        return {
-          select: jest.fn(() => Promise.resolve({ count: 15, error: null })),
-        };
-      });
-
-      render(<AdminDashboard />);
+      await renderWithAct(<AdminDashboard />);
 
       expect(screen.getByText('Dashboard Admin')).toBeInTheDocument();
       expect(
@@ -118,7 +106,7 @@ describe('Admin Panel', () => {
     });
 
     test('muestra acciones rápidas', async () => {
-      render(<AdminDashboard />);
+      await renderWithAct(<AdminDashboard />);
 
       expect(screen.getByText('⚡ Acciones Rápidas')).toBeInTheDocument();
       expect(screen.getByText('Crear Nuevo Agente')).toBeInTheDocument();
@@ -127,13 +115,13 @@ describe('Admin Panel', () => {
     });
 
     test('maneja errores en carga de estadísticas', async () => {
-      supabase.from.mockImplementation(() => ({
+      mockSupabase.from.mockImplementation(() => ({
         select: jest.fn(() =>
           Promise.resolve({ count: null, error: { message: 'Database error' } })
         ),
       }));
 
-      render(<AdminDashboard />);
+      await renderWithAct(<AdminDashboard />);
 
       await waitFor(() => {
         // Debería mostrar 0 cuando hay error
@@ -143,12 +131,8 @@ describe('Admin Panel', () => {
   });
 
   describe('UsersPage', () => {
-    beforeEach(() => {
-      getAllUsers.mockResolvedValue(mockUsers);
-    });
-
     test('carga y muestra lista de usuarios', async () => {
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       expect(screen.getByText('Gestión de Usuarios')).toBeInTheDocument();
 
@@ -161,7 +145,7 @@ describe('Admin Panel', () => {
     });
 
     test('muestra planes de usuarios correctamente', async () => {
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       await waitFor(() => {
         expect(screen.getByText('LITE')).toBeInTheDocument();
@@ -170,18 +154,20 @@ describe('Admin Panel', () => {
     });
 
     test('muestra barras de progreso de uso de mensajes', async () => {
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       await waitFor(() => {
-        // Usuario lite: 5/100 = 5%
-        const progressBars = screen.getAllByRole('progressbar');
-        expect(progressBars.length).toBeGreaterThan(0);
+        // Verificar que hay elementos de progreso
+        const progressElements = document.querySelectorAll(
+          '.bg-green-500, .bg-yellow-500, .bg-red-500'
+        );
+        expect(progressElements.length).toBeGreaterThan(0);
       });
     });
 
     test('permite buscar usuarios', async () => {
       const user = userEvent.setup();
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       await waitFor(() => {
         expect(
@@ -190,7 +176,9 @@ describe('Admin Panel', () => {
       });
 
       const searchInput = screen.getByPlaceholderText(/Buscar usuarios/);
-      await user.type(searchInput, 'test@example.com');
+      await act(async () => {
+        await user.type(searchInput, 'test@example.com');
+      });
 
       // Solo debería mostrar el usuario filtrado
       expect(screen.getByText('test@example.com')).toBeInTheDocument();
@@ -199,13 +187,15 @@ describe('Admin Panel', () => {
 
     test('abre modal de edición al hacer click en editar', async () => {
       const user = userEvent.setup();
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       await waitFor(() => {
         expect(screen.getAllByText('Editar')[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getAllByText('Editar')[0]);
+      await act(async () => {
+        await user.click(screen.getAllByText('Editar')[0]);
+      });
 
       expect(screen.getByText(/Editar Usuario: Test User/)).toBeInTheDocument();
       expect(screen.getByDisplayValue('lite')).toBeInTheDocument();
@@ -214,24 +204,28 @@ describe('Admin Panel', () => {
 
     test('actualiza usuario correctamente', async () => {
       const user = userEvent.setup();
-      updateUser.mockResolvedValue({ id: 'user-1', plan: 'pro' });
-
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       await waitFor(() => {
         expect(screen.getAllByText('Editar')[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getAllByText('Editar')[0]);
+      await act(async () => {
+        await user.click(screen.getAllByText('Editar')[0]);
+      });
 
       // Cambiar plan a pro
       const planSelect = screen.getByDisplayValue('lite');
-      await user.selectOptions(planSelect, 'pro');
+      await act(async () => {
+        await user.selectOptions(planSelect, 'pro');
+      });
 
       // Guardar cambios
-      await user.click(screen.getByText('Guardar Cambios'));
+      await act(async () => {
+        await user.click(screen.getByText('Guardar Cambios'));
+      });
 
-      expect(updateUser).toHaveBeenCalledWith(
+      expect(mockAdminFunctions.updateUser).toHaveBeenCalledWith(
         'user-1',
         expect.objectContaining({
           plan: 'pro',
@@ -242,12 +236,8 @@ describe('Admin Panel', () => {
   });
 
   describe('AgentsPage', () => {
-    beforeEach(() => {
-      getAllAgents.mockResolvedValue(mockAgents);
-    });
-
     test('carga y muestra lista de agentes', async () => {
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       expect(screen.getByText('Gestión de Agentes')).toBeInTheDocument();
 
@@ -262,7 +252,7 @@ describe('Admin Panel', () => {
     });
 
     test('muestra estados activo/inactivo correctamente', async () => {
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Activo')).toBeInTheDocument();
@@ -272,7 +262,7 @@ describe('Admin Panel', () => {
 
     test('permite buscar agentes', async () => {
       const user = userEvent.setup();
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(
@@ -281,7 +271,9 @@ describe('Admin Panel', () => {
       });
 
       const searchInput = screen.getByPlaceholderText(/Buscar agentes/);
-      await user.type(searchInput, 'Marketing');
+      await act(async () => {
+        await user.type(searchInput, 'Marketing');
+      });
 
       expect(
         screen.getByText('Consultor de Marketing Digital')
@@ -293,13 +285,15 @@ describe('Admin Panel', () => {
 
     test('abre modal de creación de agente', async () => {
       const user = userEvent.setup();
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('+ Crear Agente')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('+ Crear Agente'));
+      await act(async () => {
+        await user.click(screen.getByText('+ Crear Agente'));
+      });
 
       expect(screen.getByText('Crear Nuevo Agente')).toBeInTheDocument();
       expect(screen.getByLabelText(/ID del Agente/)).toBeInTheDocument();
@@ -321,33 +315,43 @@ describe('Admin Panel', () => {
         is_active: true,
       };
 
-      createAgent.mockResolvedValue(newAgent);
-
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('+ Crear Agente')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('+ Crear Agente'));
+      await act(async () => {
+        await user.click(screen.getByText('+ Crear Agente'));
+      });
 
       // Llenar formulario
-      await user.type(screen.getByLabelText(/ID del Agente/), 'nuevo-agente');
-      await user.type(screen.getByLabelText(/Nombre/), 'Nuevo Agente');
-      await user.type(screen.getByLabelText(/Título/), 'Test Title');
-      await user.type(screen.getByLabelText(/Emoji/), '🔥');
-      await user.type(screen.getByLabelText(/Descripción/), 'Test description');
-      await user.selectOptions(screen.getByLabelText(/Categoría/), 'Marketing');
-      await user.type(screen.getByLabelText(/System Prompt/), 'Test prompt');
-      await user.type(
-        screen.getByLabelText(/Mensaje de Bienvenida/),
-        'Test welcome'
-      );
+      await act(async () => {
+        await user.type(screen.getByLabelText(/ID del Agente/), 'nuevo-agente');
+        await user.type(screen.getByLabelText(/Nombre/), 'Nuevo Agente');
+        await user.type(screen.getByLabelText(/Título/), 'Test Title');
+        await user.type(screen.getByLabelText(/Emoji/), '🔥');
+        await user.type(
+          screen.getByLabelText(/Descripción/),
+          'Test description'
+        );
+        await user.selectOptions(
+          screen.getByLabelText(/Categoría/),
+          'Marketing'
+        );
+        await user.type(screen.getByLabelText(/System Prompt/), 'Test prompt');
+        await user.type(
+          screen.getByLabelText(/Mensaje de Bienvenida/),
+          'Test welcome'
+        );
+      });
 
       // Enviar formulario
-      await user.click(screen.getByText('Crear Agente'));
+      await act(async () => {
+        await user.click(screen.getByText('Crear Agente'));
+      });
 
-      expect(createAgent).toHaveBeenCalledWith(
+      expect(mockAdminFunctions.createAgent).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'nuevo-agente',
           name: 'Nuevo Agente',
@@ -358,18 +362,20 @@ describe('Admin Panel', () => {
 
     test('edita agente existente', async () => {
       const user = userEvent.setup();
-      updateAgent.mockResolvedValue({
-        ...mockAgents[0],
+      mockAdminFunctions.updateAgent.mockResolvedValue({
+        ...mockAdminFunctions.getAllAgents()[0],
         name: 'Nombre Actualizado',
       });
 
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(screen.getAllByText('Editar')[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getAllByText('Editar')[0]);
+      await act(async () => {
+        await user.click(screen.getAllByText('Editar')[0]);
+      });
 
       expect(screen.getByText('Editar Agente')).toBeInTheDocument();
       expect(
@@ -380,13 +386,17 @@ describe('Admin Panel', () => {
       const nameInput = screen.getByDisplayValue(
         'Consultor de Marketing Digital'
       );
-      await user.clear(nameInput);
-      await user.type(nameInput, 'Nombre Actualizado');
+      await act(async () => {
+        await user.clear(nameInput);
+        await user.type(nameInput, 'Nombre Actualizado');
+      });
 
       // Guardar
-      await user.click(screen.getByText('Actualizar Agente'));
+      await act(async () => {
+        await user.click(screen.getByText('Actualizar Agente'));
+      });
 
-      expect(updateAgent).toHaveBeenCalledWith(
+      expect(mockAdminFunctions.updateAgent).toHaveBeenCalledWith(
         'marketing-digital',
         expect.objectContaining({
           name: 'Nombre Actualizado',
@@ -396,55 +406,64 @@ describe('Admin Panel', () => {
 
     test('cambia estado activo/inactivo de agente', async () => {
       const user = userEvent.setup();
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(screen.getAllByText('Desactivar')[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getAllByText('Desactivar')[0]);
+      await act(async () => {
+        await user.click(screen.getAllByText('Desactivar')[0]);
+      });
 
-      // Debería haber llamado a toggleAgentStatus
-      expect(updateAgent).toHaveBeenCalled();
+      // Debería haber llamado a updateAgent
+      expect(mockAdminFunctions.updateAgent).toHaveBeenCalled();
     });
 
     test('elimina agente con confirmación', async () => {
       const user = userEvent.setup();
 
       // Mock de window.confirm
-      window.confirm = jest.fn(() => true);
-      deleteAgent.mockResolvedValue(true);
+      global.confirm = jest.fn(() => true);
 
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(screen.getAllByText('🗑️')[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getAllByText('🗑️')[0]);
+      await act(async () => {
+        await user.click(screen.getAllByText('🗑️')[0]);
+      });
 
-      expect(window.confirm).toHaveBeenCalledWith(
+      expect(global.confirm).toHaveBeenCalledWith(
         '¿Estás seguro de que querés eliminar este agente?'
       );
-      expect(deleteAgent).toHaveBeenCalledWith('marketing-digital');
+      expect(mockAdminFunctions.deleteAgent).toHaveBeenCalledWith(
+        'marketing-digital'
+      );
     });
 
     test('valida campos obligatorios en formulario', async () => {
       const user = userEvent.setup();
-      window.alert = jest.fn();
+      global.alert = jest.fn();
 
-      render(<AgentsPage />);
+      await renderWithAct(<AgentsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('+ Crear Agente')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('+ Crear Agente'));
+      await act(async () => {
+        await user.click(screen.getByText('+ Crear Agente'));
+      });
 
       // Intentar enviar sin llenar campos obligatorios
-      await user.click(screen.getByText('Crear Agente'));
+      await act(async () => {
+        await user.click(screen.getByText('Crear Agente'));
+      });
 
-      expect(window.alert).toHaveBeenCalledWith(
+      expect(global.alert).toHaveBeenCalledWith(
         'Por favor completá todos los campos obligatorios'
       );
     });
@@ -452,14 +471,18 @@ describe('Admin Panel', () => {
 
   describe('Navegación Admin', () => {
     test('permite navegar entre secciones', async () => {
-      const { rerender } = render(<AdminDashboard />);
+      const { rerender } = await renderWithAct(<AdminDashboard />);
 
       // Simular navegación a usuarios
-      rerender(<UsersPage />);
+      await act(async () => {
+        rerender(<UsersPage />);
+      });
       expect(screen.getByText('Gestión de Usuarios')).toBeInTheDocument();
 
       // Simular navegación a agentes
-      rerender(<AgentsPage />);
+      await act(async () => {
+        rerender(<AgentsPage />);
+      });
       expect(screen.getByText('Gestión de Agentes')).toBeInTheDocument();
     });
   });
@@ -467,7 +490,8 @@ describe('Admin Panel', () => {
   describe('Permisos de acceso', () => {
     test('bloquea acceso a usuarios no admin', () => {
       // Mock usuario no admin
-      jest.mocked(require('@clerk/nextjs').useUser).mockReturnValue({
+      const { useUser } = require('@clerk/nextjs');
+      useUser.mockReturnValue({
         user: { id: 'regular-user' },
         isSignedIn: true,
         isLoaded: true,
@@ -484,9 +508,11 @@ describe('Admin Panel', () => {
 
   describe('Manejo de errores en Admin', () => {
     test('maneja errores de carga de usuarios', async () => {
-      getAllUsers.mockRejectedValue(new Error('Database error'));
+      mockAdminFunctions.getAllUsers.mockRejectedValue(
+        new Error('Database error')
+      );
 
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       await waitFor(() => {
         // Debería mostrar lista vacía sin errores críticos
@@ -496,19 +522,23 @@ describe('Admin Panel', () => {
 
     test('maneja errores de actualización de usuario', async () => {
       const user = userEvent.setup();
-      updateUser.mockRejectedValue(new Error('Update failed'));
-      window.alert = jest.fn();
+      mockAdminFunctions.updateUser.mockRejectedValue(
+        new Error('Update failed')
+      );
+      global.alert = jest.fn();
 
-      render(<UsersPage />);
+      await renderWithAct(<UsersPage />);
 
       await waitFor(() => {
         expect(screen.getAllByText('Editar')[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getAllByText('Editar')[0]);
-      await user.click(screen.getByText('Guardar Cambios'));
+      await act(async () => {
+        await user.click(screen.getAllByText('Editar')[0]);
+        await user.click(screen.getByText('Guardar Cambios'));
+      });
 
-      expect(window.alert).toHaveBeenCalledWith('Error al actualizar usuario');
+      expect(global.alert).toHaveBeenCalledWith('Error al actualizar usuario');
     });
   });
 });

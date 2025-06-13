@@ -1,14 +1,10 @@
 // __tests__/components/ChatInterface.test.js
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChatInterface from '../../app/components/ChatInterface';
-import {
-  upsertUser,
-  getOrCreateConversation,
-  getConversationMessages,
-  getUserStats,
-  deleteConversationMessages,
-} from '../../app/lib/supabase';
+
+// Los mocks ya están configurados en jest.setup.js
+const mockChatFunctions = require('../../app/lib/supabase');
 
 // Mock de fetch para API de chat
 global.fetch = jest.fn();
@@ -20,16 +16,12 @@ const mockAgent = {
   welcome_message: '¡Hola! Soy tu consultor de marketing digital.',
 };
 
-const mockConversation = {
-  id: 'conv-123',
-  user_id: 'test-user-id',
-  agent_id: 'marketing-digital',
-};
-
-const mockUserStats = {
-  plan: 'lite',
-  messages_used: 5,
-  messages_limit: 100,
+const renderWithAct = async (component) => {
+  let result;
+  await act(async () => {
+    result = render(component);
+  });
+  return result;
 };
 
 describe('ChatInterface', () => {
@@ -38,13 +30,12 @@ describe('ChatInterface', () => {
     jest.clearAllMocks();
 
     // Setup default mocks
-    upsertUser.mockResolvedValue({ id: 'test-user-id' });
-    getOrCreateConversation.mockResolvedValue(mockConversation);
-    getConversationMessages.mockResolvedValue([]);
-    getUserStats.mockResolvedValue(mockUserStats);
+    Object.keys(mockChatFunctions).forEach((key) => {
+      mockChatFunctions[key].mockClear();
+    });
 
     // Mock successful API response
-    fetch.mockResolvedValue({
+    global.fetch.mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -55,39 +46,51 @@ describe('ChatInterface', () => {
 
   describe('Renderizado inicial', () => {
     test('muestra información del agente en el header', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
-      expect(screen.getByText('🎯')).toBeInTheDocument();
-      expect(
-        screen.getByText('Consultor de Marketing Digital')
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('🎯')).toBeInTheDocument();
+        expect(
+          screen.getByText('Consultor de Marketing Digital')
+        ).toBeInTheDocument();
+      });
     });
 
-    test('muestra estado de carga inicial', () => {
-      render(<ChatInterface agent={mockAgent} />);
+    test('muestra estado de carga inicial', async () => {
+      // Hacer que las funciones tomen tiempo
+      mockChatFunctions.upsertUser.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ id: 'test-user-id' }), 100)
+          )
+      );
+
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       expect(screen.getByText(/Cargando conversación/)).toBeInTheDocument();
     });
 
     test('carga historial de conversación', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
-        expect(upsertUser).toHaveBeenCalledWith(
+        expect(mockChatFunctions.upsertUser).toHaveBeenCalledWith(
           expect.objectContaining({
             id: 'test-user-id',
           })
         );
-        expect(getOrCreateConversation).toHaveBeenCalledWith(
+        expect(mockChatFunctions.getOrCreateConversation).toHaveBeenCalledWith(
           'test-user-id',
           'marketing-digital'
         );
-        expect(getUserStats).toHaveBeenCalledWith('test-user-id');
+        expect(mockChatFunctions.getUserStats).toHaveBeenCalledWith(
+          'test-user-id'
+        );
       });
     });
 
     test('muestra mensaje de bienvenida cuando no hay historial', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -104,9 +107,11 @@ describe('ChatInterface', () => {
         { role: 'assistant', content: 'Por supuesto, ¿en qué puedo ayudarte?' },
       ];
 
-      getConversationMessages.mockResolvedValue(existingMessages);
+      mockChatFunctions.getConversationMessages.mockResolvedValue(
+        existingMessages
+      );
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -124,9 +129,11 @@ describe('ChatInterface', () => {
         { role: 'assistant', content: '' },
       ];
 
-      getConversationMessages.mockResolvedValue(messagesWithEmpty);
+      mockChatFunctions.getConversationMessages.mockResolvedValue(
+        messagesWithEmpty
+      );
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(screen.getByText('[Mensaje vacío]')).toBeInTheDocument();
@@ -136,7 +143,7 @@ describe('ChatInterface', () => {
 
   describe('Contador de mensajes', () => {
     test('muestra mensajes restantes correctamente', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(screen.getByText('95 mensajes restantes')).toBeInTheDocument();
@@ -145,7 +152,7 @@ describe('ChatInterface', () => {
 
     test('actualiza contador después de enviar mensaje', async () => {
       const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -155,8 +162,10 @@ describe('ChatInterface', () => {
 
       // Enviar mensaje
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
-      await user.type(input, 'Test message');
-      await user.click(screen.getByRole('button', { name: /enviar/i }));
+      await act(async () => {
+        await user.type(input, 'Test message');
+        await user.click(screen.getByRole('button', { name: /enviar/i }));
+      });
 
       await waitFor(() => {
         expect(screen.getByText('94 mensajes restantes')).toBeInTheDocument();
@@ -167,7 +176,7 @@ describe('ChatInterface', () => {
   describe('Envío de mensajes', () => {
     test('envía mensaje correctamente', async () => {
       const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -178,14 +187,18 @@ describe('ChatInterface', () => {
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
       const sendButton = screen.getByRole('button', { name: /enviar/i });
 
-      await user.type(input, 'Hola, necesito ayuda');
-      await user.click(sendButton);
+      await act(async () => {
+        await user.type(input, 'Hola, necesito ayuda');
+        await user.click(sendButton);
+      });
 
       // Verificar que el mensaje aparece en el chat
-      expect(screen.getByText('Hola, necesito ayuda')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Hola, necesito ayuda')).toBeInTheDocument();
+      });
 
       // Verificar que se llama a la API
-      expect(fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenCalledWith(
         '/api/chat',
         expect.objectContaining({
           method: 'POST',
@@ -197,7 +210,7 @@ describe('ChatInterface', () => {
 
     test('envía mensaje con Enter', async () => {
       const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -207,22 +220,29 @@ describe('ChatInterface', () => {
 
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
 
-      await user.type(input, 'Test message{enter}');
+      await act(async () => {
+        await user.type(input, 'Test message{enter}');
+      });
 
-      expect(screen.getByText('Test message')).toBeInTheDocument();
-      expect(fetch).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(screen.getByText('Test message')).toBeInTheDocument();
+        expect(global.fetch).toHaveBeenCalled();
+      });
     });
 
     test('no envía mensaje vacío', async () => {
-      const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /enviar/i })).toBeDisabled();
       });
 
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
-      await user.type(input, '   '); // Solo espacios
+      const user = userEvent.setup();
+
+      await act(async () => {
+        await user.type(input, '   '); // Solo espacios
+      });
 
       expect(screen.getByRole('button', { name: /enviar/i })).toBeDisabled();
     });
@@ -231,7 +251,7 @@ describe('ChatInterface', () => {
       const user = userEvent.setup();
 
       // Mock API response con delay
-      fetch.mockImplementation(
+      global.fetch.mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(
@@ -245,7 +265,7 @@ describe('ChatInterface', () => {
           )
       );
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -254,8 +274,10 @@ describe('ChatInterface', () => {
       });
 
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
-      await user.type(input, 'Test message');
-      await user.click(screen.getByRole('button', { name: /enviar/i }));
+      await act(async () => {
+        await user.type(input, 'Test message');
+        await user.click(screen.getByRole('button', { name: /enviar/i }));
+      });
 
       // Verificar que el input está deshabilitado durante el envío
       expect(input).toBeDisabled();
@@ -265,7 +287,7 @@ describe('ChatInterface', () => {
   describe('Respuestas del agente', () => {
     test('muestra respuesta del agente después de enviar mensaje', async () => {
       const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -274,8 +296,10 @@ describe('ChatInterface', () => {
       });
 
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
-      await user.type(input, 'Test question');
-      await user.click(screen.getByRole('button', { name: /enviar/i }));
+      await act(async () => {
+        await user.type(input, 'Test question');
+        await user.click(screen.getByRole('button', { name: /enviar/i }));
+      });
 
       await waitFor(() => {
         expect(
@@ -288,7 +312,7 @@ describe('ChatInterface', () => {
       const user = userEvent.setup();
 
       // Mock API con delay
-      fetch.mockImplementation(
+      global.fetch.mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(
@@ -302,7 +326,7 @@ describe('ChatInterface', () => {
           )
       );
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -311,11 +335,14 @@ describe('ChatInterface', () => {
       });
 
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
-      await user.type(input, 'Test');
-      await user.click(screen.getByRole('button', { name: /enviar/i }));
+      await act(async () => {
+        await user.type(input, 'Test');
+        await user.click(screen.getByRole('button', { name: /enviar/i }));
+      });
 
       // Verificar indicador de carga
-      expect(screen.getByText('...')).toBeInTheDocument(); // dots animation
+      const loadingDots = document.querySelectorAll('.animate-bounce');
+      expect(loadingDots.length).toBeGreaterThan(0);
     });
   });
 
@@ -323,9 +350,9 @@ describe('ChatInterface', () => {
     test('muestra error cuando falla la API', async () => {
       const user = userEvent.setup();
 
-      fetch.mockRejectedValue(new Error('Network error'));
+      global.fetch.mockRejectedValue(new Error('Network error'));
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -334,8 +361,10 @@ describe('ChatInterface', () => {
       });
 
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
-      await user.type(input, 'Test');
-      await user.click(screen.getByRole('button', { name: /enviar/i }));
+      await act(async () => {
+        await user.type(input, 'Test');
+        await user.click(screen.getByRole('button', { name: /enviar/i }));
+      });
 
       await waitFor(() => {
         expect(
@@ -347,7 +376,7 @@ describe('ChatInterface', () => {
     test('muestra error específico cuando se alcanzan límites', async () => {
       const user = userEvent.setup();
 
-      fetch.mockResolvedValue({
+      global.fetch.mockResolvedValue({
         ok: false,
         status: 429,
         json: () =>
@@ -356,7 +385,7 @@ describe('ChatInterface', () => {
           }),
       });
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -365,8 +394,10 @@ describe('ChatInterface', () => {
       });
 
       const input = screen.getByPlaceholderText(/Mensaje a Consultor/);
-      await user.type(input, 'Test');
-      await user.click(screen.getByRole('button', { name: /enviar/i }));
+      await act(async () => {
+        await user.type(input, 'Test');
+        await user.click(screen.getByRole('button', { name: /enviar/i }));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/límite de mensajes/)).toBeInTheDocument();
@@ -377,7 +408,7 @@ describe('ChatInterface', () => {
   describe('Reset de conversación', () => {
     test('muestra modal de confirmación al hacer reset', async () => {
       const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -385,9 +416,11 @@ describe('ChatInterface', () => {
         ).toBeInTheDocument();
       });
 
-      await user.click(
-        screen.getByRole('button', { name: /Nueva conversación/i })
-      );
+      await act(async () => {
+        await user.click(
+          screen.getByRole('button', { name: /Nueva conversación/i })
+        );
+      });
 
       expect(screen.getByText(/¿Resetear conversación?/)).toBeInTheDocument();
       expect(
@@ -400,7 +433,7 @@ describe('ChatInterface', () => {
 
     test('cancela reset correctamente', async () => {
       const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -408,10 +441,12 @@ describe('ChatInterface', () => {
         ).toBeInTheDocument();
       });
 
-      await user.click(
-        screen.getByRole('button', { name: /Nueva conversación/i })
-      );
-      await user.click(screen.getByRole('button', { name: /Cancelar/i }));
+      await act(async () => {
+        await user.click(
+          screen.getByRole('button', { name: /Nueva conversación/i })
+        );
+        await user.click(screen.getByRole('button', { name: /Cancelar/i }));
+      });
 
       expect(
         screen.queryByText(/¿Resetear conversación?/)
@@ -420,9 +455,8 @@ describe('ChatInterface', () => {
 
     test('ejecuta reset y limpia conversación', async () => {
       const user = userEvent.setup();
-      deleteConversationMessages.mockResolvedValue(true);
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -430,13 +464,15 @@ describe('ChatInterface', () => {
         ).toBeInTheDocument();
       });
 
-      await user.click(
-        screen.getByRole('button', { name: /Nueva conversación/i })
-      );
-      await user.click(screen.getByRole('button', { name: /Resetear/i }));
+      await act(async () => {
+        await user.click(
+          screen.getByRole('button', { name: /Nueva conversación/i })
+        );
+        await user.click(screen.getByRole('button', { name: /Resetear/i }));
+      });
 
       await waitFor(() => {
-        expect(deleteConversationMessages).toHaveBeenCalled();
+        expect(mockChatFunctions.deleteConversationMessages).toHaveBeenCalled();
         expect(screen.getByText(mockAgent.welcome_message)).toBeInTheDocument();
       });
     });
@@ -445,7 +481,7 @@ describe('ChatInterface', () => {
   describe('Auto-resize textarea', () => {
     test('textarea se expande con contenido', async () => {
       const user = userEvent.setup();
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(
@@ -455,7 +491,9 @@ describe('ChatInterface', () => {
 
       const textarea = screen.getByPlaceholderText(/Mensaje a Consultor/);
 
-      await user.type(textarea, 'Línea 1\nLínea 2\nLínea 3');
+      await act(async () => {
+        await user.type(textarea, 'Línea 1\nLínea 2\nLínea 3');
+      });
 
       // El textarea debería tener más altura
       expect(textarea.style.height).not.toBe('auto');
@@ -463,8 +501,8 @@ describe('ChatInterface', () => {
   });
 
   describe('Manejo de agente inválido', () => {
-    test('muestra error cuando no hay agente', () => {
-      render(<ChatInterface agent={null} />);
+    test('muestra error cuando no hay agente', async () => {
+      await renderWithAct(<ChatInterface agent={null} />);
 
       expect(
         screen.getByText(/No se pudo cargar el agente/)
@@ -474,18 +512,20 @@ describe('ChatInterface', () => {
       ).toBeInTheDocument();
     });
 
-    test('usa valores por defecto para agente incompleto', () => {
+    test('usa valores por defecto para agente incompleto', async () => {
       const incompleteAgent = { id: 'test' };
-      render(<ChatInterface agent={incompleteAgent} />);
+      await renderWithAct(<ChatInterface agent={incompleteAgent} />);
 
-      expect(screen.getByText('Agente')).toBeInTheDocument(); // nombre por defecto
-      expect(screen.getByText('🤖')).toBeInTheDocument(); // emoji por defecto
+      await waitFor(() => {
+        expect(screen.getByText('Agente')).toBeInTheDocument(); // nombre por defecto
+        expect(screen.getByText('🤖')).toBeInTheDocument(); // emoji por defecto
+      });
     });
   });
 
   describe('Accesibilidad', () => {
     test('textarea tiene label apropiado', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         const textarea = screen.getByPlaceholderText(/Mensaje a Consultor/);
@@ -497,7 +537,7 @@ describe('ChatInterface', () => {
     });
 
     test('botón de envío tiene estado apropiado', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         const sendButton = screen.getByRole('button', { name: /enviar/i });
@@ -506,12 +546,12 @@ describe('ChatInterface', () => {
     });
 
     test('mensajes tienen estructura semántica correcta', async () => {
-      getConversationMessages.mockResolvedValue([
+      mockChatFunctions.getConversationMessages.mockResolvedValue([
         { role: 'user', content: 'Test user message' },
         { role: 'assistant', content: 'Test assistant message' },
       ]);
 
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         expect(screen.getByText('Test user message')).toBeInTheDocument();
@@ -522,18 +562,16 @@ describe('ChatInterface', () => {
 
   describe('Responsive design', () => {
     test('aplica clases CSS correctas para mobile', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
-        const chatContainer =
-          screen.getByRole('main') ||
-          document.querySelector('.flex.flex-col.h-full');
-        expect(chatContainer).toHaveClass('h-full');
+        const chatContainer = document.querySelector('.flex.flex-col.h-full');
+        expect(chatContainer).toBeInTheDocument();
       });
     });
 
     test('textarea tiene altura mínima y máxima apropiada', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
         const textarea = screen.getByPlaceholderText(/Mensaje a Consultor/);
@@ -544,17 +582,21 @@ describe('ChatInterface', () => {
 
   describe('Performance', () => {
     test('no realiza llamadas innecesarias a la API', async () => {
-      render(<ChatInterface agent={mockAgent} />);
+      await renderWithAct(<ChatInterface agent={mockAgent} />);
 
       await waitFor(() => {
-        expect(upsertUser).toHaveBeenCalledTimes(1);
-        expect(getOrCreateConversation).toHaveBeenCalledTimes(1);
-        expect(getUserStats).toHaveBeenCalledTimes(1);
+        expect(mockChatFunctions.upsertUser).toHaveBeenCalledTimes(1);
+        expect(mockChatFunctions.getOrCreateConversation).toHaveBeenCalledTimes(
+          1
+        );
+        expect(mockChatFunctions.getUserStats).toHaveBeenCalledTimes(1);
       });
     });
 
-    test('limpia listeners correctamente al desmontar', () => {
-      const { unmount } = render(<ChatInterface agent={mockAgent} />);
+    test('limpia listeners correctamente al desmontar', async () => {
+      const { unmount } = await renderWithAct(
+        <ChatInterface agent={mockAgent} />
+      );
 
       // No debería haber errores al desmontar
       expect(() => unmount()).not.toThrow();
