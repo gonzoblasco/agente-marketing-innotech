@@ -28,21 +28,43 @@ export async function POST(request) {
     // Asegurar que el usuario existe en nuestra BD
     await upsertUser(user);
 
-    // Crear preferencia de MercadoPago
-    const preference = await createPaymentPreference(
-      planId,
-      user.id,
-      user.emailAddresses[0]?.emailAddress
-    );
+    // ⭐ FIX: Verificar si MercadoPago está configurado
+    try {
+      // Crear preferencia de MercadoPago
+      const preference = await createPaymentPreference(
+        planId,
+        user.id,
+        user.emailAddresses[0]?.emailAddress
+      );
 
-    console.log('✅ Preferencia MP creada:', preference.id);
+      console.log('✅ Preferencia MP creada:', preference.id);
 
-    return NextResponse.json({
-      preference_id: preference.id,
-      init_point: preference.init_point,
-      sandbox_init_point: preference.sandbox_init_point,
-      plan: PLANS[planId],
-    });
+      return NextResponse.json({
+        preference_id: preference.id,
+        init_point: preference.init_point,
+        sandbox_init_point: preference.sandbox_init_point,
+        plan: PLANS[planId],
+      });
+    } catch (mpError) {
+      // Si MercadoPago no está configurado, devolver error amigable
+      if (mpError.message.includes('MercadoPago no está configurado')) {
+        return NextResponse.json(
+          {
+            error: 'Pagos temporalmente deshabilitados',
+            message:
+              'El sistema de pagos está en mantenimiento. Intentá más tarde.',
+            debug:
+              process.env.NODE_ENV === 'development'
+                ? mpError.message
+                : undefined,
+          },
+          { status: 503 } // Service Unavailable
+        );
+      }
+
+      // Re-lanzar otros errores
+      throw mpError;
+    }
   } catch (error) {
     console.error('❌ Error creando pago:', error);
     console.error('❌ Error stack:', error.stack);

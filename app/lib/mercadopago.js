@@ -14,21 +14,32 @@ console.log('🔧 MP Debug:', {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
 });
 
-if (!accessToken) {
-  throw new Error(
-    'MercadoPago Access Token no encontrado en variables de entorno'
+// ⭐ FIX: No lanzar error durante el build
+let client = null;
+let preference = null;
+
+if (accessToken) {
+  try {
+    // Configuración de MercadoPago
+    client = new MercadoPagoConfig({
+      accessToken,
+      options: {
+        timeout: 5000,
+      },
+    });
+
+    preference = new Preference(client);
+  } catch (error) {
+    console.warn('⚠️ MercadoPago no configurado:', error.message);
+  }
+} else {
+  console.warn(
+    '⚠️ MercadoPago Access Token no encontrado - funcionalidad de pagos deshabilitada'
   );
 }
 
-// Configuración de MercadoPago
-const client = new MercadoPagoConfig({
-  accessToken,
-  options: {
-    timeout: 5000,
-  },
-});
-
-export const preference = new Preference(client);
+// Exportar preference (puede ser null)
+export { preference };
 
 // Planes disponibles
 export const PLANS = {
@@ -51,6 +62,13 @@ export const PLANS = {
 // Función para crear preferencia de pago
 export async function createPaymentPreference(planId, userId, userEmail) {
   try {
+    // ⭐ FIX: Validar que MercadoPago esté configurado
+    if (!preference) {
+      throw new Error(
+        'MercadoPago no está configurado. Verificar variables de entorno.'
+      );
+    }
+
     const plan = PLANS[planId];
 
     if (!plan) {
@@ -66,7 +84,7 @@ export async function createPaymentPreference(planId, userId, userEmail) {
       throw new Error('Email de usuario requerido');
     }
 
-    // 🔧 FIX CRÍTICO: Estructura sin auto_return para testing
+    // Estructura sin auto_return para testing
     const preferenceData = {
       items: [
         {
@@ -86,7 +104,6 @@ export async function createPaymentPreference(planId, userId, userEmail) {
         failure: `${baseUrl}/payment/failure`,
         pending: `${baseUrl}/payment/pending`,
       },
-      // auto_return: 'approved', // ⭐ Comentado temporalmente
       external_reference: `${userId}_${planId}_${Date.now()}`,
     };
 
