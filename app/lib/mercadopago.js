@@ -1,8 +1,29 @@
 // app/lib/mercadopago.js
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 
-// Debug de credenciales
+console.log('🔧 MercadoPago Environment Check:', {
+  NODE_ENV: process.env.NODE_ENV,
+  HAS_SANDBOX_TOKEN: !!process.env.MP_ACCESS_TOKEN_SANDBOX,
+  HAS_PROD_TOKEN: !!process.env.MP_ACCESS_TOKEN_PROD,
+  HAS_SANDBOX_KEY: !!process.env.MP_PUBLIC_KEY_SANDBOX,
+  HAS_PROD_KEY: !!process.env.MP_PUBLIC_KEY_PROD,
+  SANDBOX_TOKEN_PREFIX: process.env.MP_ACCESS_TOKEN_SANDBOX?.substring(0, 10),
+  PROD_TOKEN_PREFIX: process.env.MP_ACCESS_TOKEN_PROD?.substring(0, 10),
+});
+
 const accessToken =
+  process.env.NODE_ENV === 'production'
+    ? process.env.MP_ACCESS_TOKEN_PROD
+    : process.env.MP_ACCESS_TOKEN_SANDBOX;
+
+console.log('🎯 Selected Token:', {
+  isProduction: process.env.NODE_ENV === 'production',
+  hasToken: !!accessToken,
+  tokenPrefix: accessToken?.substring(0, 10),
+});
+
+// Debug de credenciales
+const accessToken2 =
   process.env.NODE_ENV === 'production'
     ? process.env.MP_ACCESS_TOKEN_PROD
     : process.env.MP_ACCESS_TOKEN_SANDBOX;
