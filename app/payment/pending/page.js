@@ -1,11 +1,12 @@
 // app/payment/pending/page.js
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function PaymentPending() {
+// Componente que usa useSearchParams
+function PaymentPendingContent() {
   const searchParams = useSearchParams();
   const [paymentData, setPaymentData] = useState(null);
 
@@ -93,5 +94,26 @@ export default function PaymentPending() {
         </p>
       </div>
     </div>
+  );
+}
+
+// Loading fallback
+function PaymentPendingLoading() {
+  return (
+    <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4'>
+      <div className='max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto mb-4'></div>
+        <p className='text-gray-600'>Cargando información del pago...</p>
+      </div>
+    </div>
+  );
+}
+
+// Componente principal con Suspense
+export default function PaymentPending() {
+  return (
+    <Suspense fallback={<PaymentPendingLoading />}>
+      <PaymentPendingContent />
+    </Suspense>
   );
 }
