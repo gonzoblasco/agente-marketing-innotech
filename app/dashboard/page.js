@@ -2,13 +2,15 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useState, useEffect } from 'react';
-import { getUserStats, supabase } from '../lib/supabase';
+import { getUserStats, getAgentsByCategory, supabase } from '../lib/supabase';
+import { getCategoryStyles } from '../lib/categories';
 import Link from 'next/link';
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
   const [stats, setStats] = useState(null);
   const [conversations, setConversations] = useState([]);
+  const [quickActions, setQuickActions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,6 +34,38 @@ export default function Dashboard() {
         .limit(10);
 
       setConversations(userConversations || []);
+
+      // Cargar agentes populares para acciones rápidas (diversificados por categoría)
+      const popularAgents = await getAgentsByCategory();
+
+      // Seleccionar un agente por categoría para diversidad
+      const categoriesRepresented = [];
+      const diverseAgents = [];
+
+      for (const agent of popularAgents) {
+        const agentCategory = agent.category || 'Sin Categoría';
+        if (
+          !categoriesRepresented.includes(agentCategory) &&
+          diverseAgents.length < 6
+        ) {
+          diverseAgents.push(agent);
+          categoriesRepresented.push(agentCategory);
+        }
+      }
+
+      // Si no tenemos suficientes, agregar más
+      if (diverseAgents.length < 6) {
+        for (const agent of popularAgents) {
+          if (
+            !diverseAgents.find((a) => a.id === agent.id) &&
+            diverseAgents.length < 6
+          ) {
+            diverseAgents.push(agent);
+          }
+        }
+      }
+
+      setQuickActions(diverseAgents);
     } catch (error) {
       console.error('Error loading user data:', error);
     } finally {
@@ -153,7 +187,13 @@ export default function Dashboard() {
                           </p>
                           <p className='text-sm text-gray-500'>
                             {new Date(conv.updated_at).toLocaleDateString(
-                              'es-AR'
+                              'es-AR',
+                              {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              }
                             )}
                           </p>
                         </div>
@@ -175,9 +215,18 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <p className='text-gray-500 text-center py-4'>
-                  No tenés conversaciones aún. ¡Empezá chateando con un agente!
-                </p>
+                <div className='text-center py-8'>
+                  <div className='text-4xl mb-4'>💬</div>
+                  <p className='text-gray-500 mb-4'>
+                    No tenés conversaciones aún
+                  </p>
+                  <Link
+                    href='/'
+                    className='text-blue-600 hover:text-blue-700 font-medium'
+                  >
+                    ¡Empezá chateando con un agente! →
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -208,9 +257,12 @@ export default function Dashboard() {
                 </p>
 
                 {stats?.plan === 'lite' && (
-                  <button className='w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors'>
+                  <Link
+                    href='/pricing'
+                    className='block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center'
+                  >
                     Actualizar Plan
-                  </button>
+                  </Link>
                 )}
               </div>
             </div>
@@ -222,43 +274,80 @@ export default function Dashboard() {
               </h3>
 
               <div className='space-y-3'>
-                <Link
-                  href='/chat/marketing-digital'
-                  className='block w-full text-left p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors'
-                >
-                  <div className='flex items-center'>
-                    <span className='text-2xl mr-3'>🎯</span>
-                    <div>
-                      <p className='font-medium'>Marketing Digital</p>
-                      <p className='text-xs text-gray-500'>
-                        Estrategias para PyMEs
-                      </p>
-                    </div>
-                  </div>
-                </Link>
+                {quickActions.map((agent) => {
+                  const categoryStyles = getCategoryStyles(
+                    agent.category || 'Sin Categoría'
+                  );
 
-                <Link
-                  href='/chat/mentor-productividad'
-                  className='block w-full text-left p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors'
-                >
-                  <div className='flex items-center'>
-                    <span className='text-2xl mr-3'>⚡</span>
-                    <div>
-                      <p className='font-medium'>Productividad</p>
-                      <p className='text-xs text-gray-500'>
-                        Organización personal
-                      </p>
-                    </div>
-                  </div>
-                </Link>
+                  return (
+                    <Link
+                      key={agent.id}
+                      href={`/chat/${agent.id}`}
+                      className='block w-full text-left p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors'
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center'>
+                          <span className='text-2xl mr-3'>{agent.emoji}</span>
+                          <div>
+                            <p className='font-medium text-sm'>{agent.name}</p>
+                            <div className='flex items-center space-x-2'>
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoryStyles.bgClass} ${categoryStyles.textClass}`}
+                              >
+                                <span className='mr-1'>
+                                  {categoryStyles.icon}
+                                </span>
+                                {agent.category || 'Sin Categoría'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <svg
+                          className='w-4 h-4 text-gray-400'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M9 5l7 7-7 7'
+                          />
+                        </svg>
+                      </div>
+                    </Link>
+                  );
+                })}
 
                 <Link
                   href='/'
-                  className='block w-full text-center p-2 text-blue-600 hover:text-blue-700 text-sm'
+                  className='block w-full text-center p-2 text-blue-600 hover:text-blue-700 text-sm font-medium'
                 >
                   Ver todos los agentes →
                 </Link>
               </div>
+            </div>
+
+            {/* Tips y ayuda */}
+            <div className='bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6'>
+              <h3 className='text-lg font-semibold text-gray-800 mb-3'>
+                💡 Tips para aprovechar al máximo
+              </h3>
+              <ul className='text-sm text-gray-600 space-y-2'>
+                <li className='flex items-start'>
+                  <span className='text-blue-500 mr-2'>•</span>
+                  Sé específico en tus preguntas para mejores respuestas
+                </li>
+                <li className='flex items-start'>
+                  <span className='text-blue-500 mr-2'>•</span>
+                  Probá diferentes agentes según tu necesidad
+                </li>
+                <li className='flex items-start'>
+                  <span className='text-blue-500 mr-2'>•</span>
+                  Podés continuar conversaciones previas
+                </li>
+              </ul>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { getColorFromCategory } from '../lib/categories';
 
 // Cache en memoria para mejor performance
 let agentsCache = null;
@@ -14,6 +15,7 @@ const FALLBACK_AGENTS = [
     emoji: '🎯',
     description:
       'Experto en marketing digital para PyMEs argentinas. Te ayudo con estrategias de redes sociales, Google Ads, Facebook Ads, email marketing y WhatsApp Business.',
+    category: 'Marketing',
     color: 'blue',
     gradient: 'from-blue-500 to-blue-700',
     system_prompt: `Sos un consultor experto en Marketing Digital especializado en PyMEs argentinas. Tu personalidad es práctica, directa y empática con las limitaciones de presupuesto de las pequeñas empresas.
@@ -65,6 +67,7 @@ Ejemplo: *"Tengo una panadería en Palermo y no sé cómo usar Instagram para ve
     emoji: '⚡',
     description:
       'Especialista en productividad para emprendedores que se sienten abrumados. Te ayudo con gestión del tiempo, sistemas de organización y técnicas anti-procrastinación.',
+    category: 'Productividad',
     color: 'green',
     gradient: 'from-green-500 to-green-700',
     system_prompt: `Sos un mentor de productividad especializado en emprendedores que se sienten overwhelmed y desorganizados.`,
@@ -72,6 +75,28 @@ Ejemplo: *"Tengo una panadería en Palermo y no sé cómo usar Instagram para ve
     is_active: true,
   },
 ];
+
+// Función para procesar agentes y aplicar estilos de categoría
+function processAgentWithCategory(agent) {
+  if (!agent) return agent;
+
+  // Si el agente ya tiene color/gradient manual, respetarlo
+  if (agent.color && agent.gradient) {
+    return agent;
+  }
+
+  // Aplicar color automático basado en categoría
+  const categoryStyles = getColorFromCategory(
+    agent.category || 'Sin Categoría'
+  );
+
+  return {
+    ...agent,
+    color: categoryStyles.color,
+    gradient: categoryStyles.gradient,
+    category: agent.category || 'Sin Categoría',
+  };
+}
 
 // Función para obtener agentes desde BD con manejo de errores robusto
 async function fetchAgentsFromDB() {
@@ -82,7 +107,8 @@ async function fetchAgentsFromDB() {
       .from('agents')
       .select('*')
       .eq('is_active', true)
-      .order('created_at', { ascending: false });
+      .order('category', { ascending: true })
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('❌ Supabase error:', error);
@@ -90,11 +116,15 @@ async function fetchAgentsFromDB() {
     }
 
     console.log(`✅ Successfully fetched ${data?.length || 0} agents from BD`);
-    return data || [];
+
+    // Procesar agentes para aplicar estilos de categoría
+    const processedAgents = (data || []).map(processAgentWithCategory);
+
+    return processedAgents;
   } catch (err) {
     console.error('💥 Exception fetching agents from BD:', err);
     console.log('🔄 Using fallback agents...');
-    return FALLBACK_AGENTS;
+    return FALLBACK_AGENTS.map(processAgentWithCategory);
   }
 }
 
@@ -139,10 +169,11 @@ export async function getAllAgents() {
 
     // Usar fallback si todo falla
     console.log('🚨 Using fallback agents due to error');
-    agentsCache = FALLBACK_AGENTS;
+    const processedFallback = FALLBACK_AGENTS.map(processAgentWithCategory);
+    agentsCache = processedFallback;
     lastCacheUpdate = now;
 
-    return FALLBACK_AGENTS;
+    return processedFallback;
   }
 }
 
@@ -154,23 +185,23 @@ export async function getAgent(agentId) {
     const agents = await getAllAgents();
     console.log(
       `📋 Available agents:`,
-      agents.map((a) => ({ id: a.id, name: a.name }))
+      agents.map((a) => ({ id: a.id, name: a.name, category: a.category }))
     );
 
     const agent = agents.find((a) => a.id === agentId);
 
     if (agent) {
-      console.log(`✅ Found agent: ${agent.name}`);
+      console.log(`✅ Found agent: ${agent.name} (${agent.category})`);
       return agent;
     } else {
       console.log(`❌ Agent ${agentId} not found, using first available agent`);
-      return agents[0] || FALLBACK_AGENTS[0];
+      return agents[0] || FALLBACK_AGENTS.map(processAgentWithCategory)[0];
     }
   } catch (error) {
     console.error('💥 Error in getAgent:', error);
     // En caso de error total, devolver el primer agente de fallback
     console.log('🚨 Using fallback agent due to error');
-    return FALLBACK_AGENTS[0];
+    return processAgentWithCategory(FALLBACK_AGENTS[0]);
   }
 }
 

@@ -289,7 +289,8 @@ export async function getActiveAgents() {
       .from('agents')
       .select('*')
       .eq('is_active', true)
-      .order('created_at', { ascending: false });
+      .order('category', { ascending: true })
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('Error fetching active agents:', error);
@@ -415,5 +416,53 @@ export async function deleteConversationMessages(conversationId) {
   } catch (err) {
     console.error('Exception in deleteConversationMessages:', err);
     return false;
+  }
+}
+
+// Obtener agentes por categoría
+export async function getAgentsByCategory(category = null) {
+  try {
+    let query = supabase.from('agents').select('*').eq('is_active', true);
+
+    if (category && category !== 'Todas') {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query
+      .order('category', { ascending: true })
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching agents by category:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('Exception in getAgentsByCategory:', err);
+    return [];
+  }
+}
+
+// Obtener todas las categorías únicas
+export async function getUniqueCategories() {
+  try {
+    const { data, error } = await supabase
+      .from('agents')
+      .select('category')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return ['Sin Categoría'];
+    }
+
+    const categories = [
+      ...new Set(data.map((agent) => agent.category || 'Sin Categoría')),
+    ];
+    return categories.sort();
+  } catch (err) {
+    console.error('Exception in getUniqueCategories:', err);
+    return ['Sin Categoría'];
   }
 }

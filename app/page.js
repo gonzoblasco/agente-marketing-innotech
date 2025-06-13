@@ -5,9 +5,9 @@ import Link from 'next/link';
 export const metadata = {
   title: 'InnoTech Solutions - Netflix de Agentes Conversacionales',
   description:
-    'Accedé a un catálogo de agentes de IA especializados para resolver problemas específicos de emprendedores y PyMEs latinos.',
+    'Accedé a un catálogo de agentes de IA especializados para PyMEs, emprendedores, creativos y profesionales independientes. Desde marketing hasta desarrollo gastronómico.',
   keywords:
-    'agentes conversacionales, IA, emprendedores, PyMEs, Argentina, consultoría, marketing digital',
+    'agentes conversacionales, IA, emprendedores, PyMEs, profesionales independientes, creativos, marketing digital, diseño gráfico, chef consultor, Argentina',
 };
 
 export default function Home() {

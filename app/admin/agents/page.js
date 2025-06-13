@@ -239,33 +239,23 @@ function AgentModal({ agent = null, onSave, onCancel, title }) {
     title: agent?.title || '',
     emoji: agent?.emoji || '🤖',
     description: agent?.description || '',
-    color: agent?.color || 'blue',
-    gradient: agent?.gradient || 'from-blue-500 to-blue-700',
+    category: agent?.category || 'Sin Categoría',
     system_prompt: agent?.system_prompt || '',
     welcome_message: agent?.welcome_message || '',
     is_active: agent?.is_active ?? true,
   });
 
-  const colorOptions = [
-    { name: 'Azul', value: 'blue', gradient: 'from-blue-500 to-blue-700' },
-    { name: 'Verde', value: 'green', gradient: 'from-green-500 to-green-700' },
-    {
-      name: 'Púrpura',
-      value: 'purple',
-      gradient: 'from-purple-500 to-purple-700',
-    },
-    { name: 'Rojo', value: 'red', gradient: 'from-red-500 to-red-700' },
-    { name: 'Gris', value: 'gray', gradient: 'from-gray-500 to-gray-700' },
-    {
-      name: 'Amarillo',
-      value: 'yellow',
-      gradient: 'from-yellow-500 to-yellow-700',
-    },
-    {
-      name: 'Indigo',
-      value: 'indigo',
-      gradient: 'from-indigo-500 to-indigo-700',
-    },
+  const availableCategories = [
+    'Marketing',
+    'Productividad',
+    'Finanzas',
+    'Ventas',
+    'Legal',
+    'Tecnología',
+    'Recursos Humanos',
+    'Creatividad',
+    'Profesionales',
+    'Sin Categoría',
   ];
 
   const handleSubmit = (e) => {
@@ -278,15 +268,6 @@ function AgentModal({ agent = null, onSave, onCancel, title }) {
     }
 
     onSave(formData);
-  };
-
-  const handleColorChange = (color) => {
-    const selectedColor = colorOptions.find((c) => c.value === color);
-    setFormData({
-      ...formData,
-      color: color,
-      gradient: selectedColor.gradient,
-    });
   };
 
   return (
@@ -362,27 +343,24 @@ function AgentModal({ agent = null, onSave, onCancel, title }) {
 
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-2'>
-                    Color
+                    Categoría *
                   </label>
-                  <div className='grid grid-cols-4 gap-2'>
-                    {colorOptions.map((color) => (
-                      <button
-                        key={color.value}
-                        type='button'
-                        onClick={() => handleColorChange(color.value)}
-                        className={`p-2 rounded-lg border-2 transition-colors ${
-                          formData.color === color.value
-                            ? 'border-gray-800'
-                            : 'border-gray-200 hover:border-gray-400'
-                        }`}
-                      >
-                        <div
-                          className={`w-full h-8 rounded bg-gradient-to-r ${color.gradient}`}
-                        ></div>
-                        <div className='text-xs mt-1'>{color.name}</div>
-                      </button>
+                  <select
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  >
+                    {availableCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
                     ))}
-                  </div>
+                  </select>
+                  <p className='text-xs text-gray-500 mt-1'>
+                    El color se asignará automáticamente según la categoría
+                  </p>
                 </div>
 
                 <div>
