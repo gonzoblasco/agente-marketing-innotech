@@ -66,10 +66,11 @@ export async function createPaymentPreference(planId, userId, userEmail) {
       throw new Error('Email de usuario requerido');
     }
 
+    // 🔧 FIX CRÍTICO: Estructura sin auto_return para testing
     const preferenceData = {
       items: [
         {
-          id: `${planId}_${userId}`,
+          id: `plan_${planId}_${userId}`,
           title: plan.name,
           description: plan.description,
           quantity: 1,
@@ -85,15 +86,11 @@ export async function createPaymentPreference(planId, userId, userEmail) {
         failure: `${baseUrl}/payment/failure`,
         pending: `${baseUrl}/payment/pending`,
       },
-      auto_return: 'approved',
-      notification_url: `${baseUrl}/api/webhooks/mercadopago`,
+      // auto_return: 'approved', // ⭐ Comentado temporalmente
       external_reference: `${userId}_${planId}_${Date.now()}`,
-      metadata: {
-        user_id: userId,
-        plan_id: planId,
-        upgrade_type: 'plan_upgrade',
-      },
     };
+
+    console.log('🔧 Preference data:', JSON.stringify(preferenceData, null, 2));
 
     console.log('🔄 Creando preferencia MP:', {
       plan: plan.name,
