@@ -213,6 +213,15 @@ export default function ChatInterface({ agent }) {
       ]);
 
       setMessagesRemaining((prev) => Math.max(0, (prev || 100) - 1));
+
+      // AGREGAR: Feedback visual de éxito
+      const sendButton = document.querySelector('[data-send-button]');
+      if (sendButton) {
+        sendButton.style.background = '#10B981';
+        setTimeout(() => {
+          sendButton.style.background = '';
+        }, 500);
+      }
     } catch (error) {
       console.error('Error:', error);
 
@@ -228,7 +237,7 @@ export default function ChatInterface({ agent }) {
         ...updatedMessages,
         {
           role: 'assistant',
-          content: errorMessage,
+          content: `❌ ${errorMessage}`,
         },
       ]);
     }
@@ -468,6 +477,73 @@ export default function ChatInterface({ agent }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ChatInputWithLoading({ onSendMessage, disabled }) {
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!message.trim() || sending) return;
+
+    setSending(true);
+    try {
+      await onSendMessage(message);
+      setMessage('');
+
+      // Success feedback visual
+      const button = document.querySelector('[data-send-button]');
+      if (button) {
+        button.style.background = '#10B981';
+        setTimeout(() => {
+          button.style.background = '';
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      // Error se maneja en el componente padre
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className='relative'>
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+        placeholder='Escribí tu mensaje...'
+        className='w-full resize-none rounded-2xl border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-h-32 min-h-[52px]'
+        rows={1}
+        disabled={sending || disabled}
+      />
+      <button
+        data-send-button
+        onClick={sendMessage}
+        disabled={isLoading || !inputMessage.trim()}
+        className='absolute bottom-2 right-2 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200'
+      >
+        {isLoading ? (
+          <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+        ) : (
+          <svg
+            className='w-4 h-4'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M12 19l9 2-9-18-9 18 9-2zm0 0v-8'
+            />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }

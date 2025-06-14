@@ -1,0 +1,43 @@
+{
+  "name": "InnoTech Solutions - Netflix de Agentes Conversacionales",
+  "short_name": "InnoTech",
+  "description": "Agentes de IA especializados para emprendedores y PyMEs argentinas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "es",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Galería de Agentes",
+      "short_name": "Agentes",
+      "description": "Ver todos los agentes disponibles",
+      "url": "/",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mi Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ver mi actividad y estadísticas",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

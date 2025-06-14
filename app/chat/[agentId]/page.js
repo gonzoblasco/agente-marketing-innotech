@@ -43,7 +43,6 @@ export default async function ChatPage({ params }) {
 }
 
 export async function generateMetadata({ params }) {
-  // ⭐ CAMBIO CRÍTICO: También await params aquí
   const resolvedParams = await params;
   const { agentId } = resolvedParams;
 
@@ -53,11 +52,31 @@ export async function generateMetadata({ params }) {
     return {
       title: 'Agente no encontrado',
       description: 'El agente solicitado no existe.',
+      robots: { index: false, follow: false },
     };
   }
 
   return {
-    title: agent.name,
-    description: agent.description,
+    title: `${agent.name} - ${agent.title || 'Chat Especializado'}`,
+    description: `Conversá con nuestro ${agent.name}, especialista en ${
+      agent.category || 'consultoría'
+    }. ${
+      agent.description ||
+      'Agente especializado para emprendedores y PyMEs argentinas.'
+    }`,
+    openGraph: {
+      title: `${agent.name} - Agente Especializado`,
+      description: `${
+        agent.description || 'Consultoría especializada'
+      } Diseñado para emprendedores y PyMEs argentinas.`,
+      images: [`/og-agent-${agent.id}.png`],
+    },
+    keywords: [
+      `agente ${(agent.category || 'consultoría').toLowerCase()}`,
+      `consultor IA`,
+      `${agent.name.toLowerCase()}`,
+      'PyMEs Argentina',
+      'emprendedores',
+    ],
   };
 }

@@ -155,8 +155,8 @@ export default function AgentGallery() {
 
   return (
     <div className='max-w-6xl mx-auto px-4 py-8'>
-      {/* Header */}
-      <div className='text-center mb-8'>
+      {/* Header con animación de entrada */}
+      <div className='text-center mb-8 animate-fade-in-up'>
         <h1 className='text-4xl font-bold text-gray-800 mb-4'>
           Netflix de Agentes Conversacionales
         </h1>
@@ -167,50 +167,32 @@ export default function AgentGallery() {
         <p className='text-sm text-gray-500'>
           {totalAgents} agentes especializados en {categoriesCount} categorías
         </p>
-
-        {/* Estado de usuario */}
-        {isSignedIn ? (
-          <div className='bg-green-50 border border-green-200 rounded-lg p-4 mb-6 inline-block'>
-            <p className='text-green-800'>
-              ¡Hola {user.firstName}! Tenés acceso completo a todos los agentes
-            </p>
-          </div>
-        ) : (
-          <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 inline-block'>
-            <p className='text-blue-800 mb-2'>
-              Iniciá sesión para acceder a todos los agentes especializados
-            </p>
-            <SignInButton>
-              <button className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors'>
-                Crear Cuenta Gratis
-              </button>
-            </SignInButton>
-          </div>
-        )}
       </div>
 
-      {/* Filtros por categoría */}
+      {/* Filtros con animación de hover */}
       <div className='mb-8'>
         <div className='flex flex-wrap justify-center gap-2'>
-          {categories.map((category) => {
+          {categories.map((category, index) => {
             const isSelected = selectedCategory === category;
             const categoryStyles =
               category !== 'Todas' ? getCategoryStyles(category) : null;
-
-            // ⭐ CAMBIO: Usar función que cuenta desde allAgents
             const agentCount = getAgentCountForCategory(category);
 
             return (
               <button
                 key={category}
                 onClick={() => handleCategoryChange(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
                   isSelected
                     ? category === 'Todas'
-                      ? 'bg-blue-600 text-white'
-                      : `bg-gradient-to-r ${categoryStyles?.gradient} text-white ring-2 ring-white/20`
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : `bg-gradient-to-r ${categoryStyles?.gradient} text-white ring-2 ring-white/20 shadow-lg`
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-md'
                 }`}
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  animation: 'fadeInUp 0.6s ease-out forwards',
+                }}
               >
                 {category === 'Todas' ? (
                   <>🔍 {category}</>
@@ -219,7 +201,6 @@ export default function AgentGallery() {
                     {categoryStyles?.icon} {category}
                   </>
                 )}
-                {/* ⭐ CAMBIO: Mostrar contador siempre, incluso para "Todas" */}
                 <span className='ml-1 text-xs opacity-75'>({agentCount})</span>
               </button>
             );
@@ -227,11 +208,18 @@ export default function AgentGallery() {
         </div>
       </div>
 
-      {/* Grid de agentes */}
+      {/* Grid con animación escalonada */}
       {agents.length > 0 ? (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {agents.map((agent) => (
-            <div key={agent.id} className='group block'>
+          {agents.map((agent, index) => (
+            <div
+              key={agent.id}
+              className='group block'
+              style={{
+                animationDelay: `${index * 150}ms`,
+                animation: 'slideInUp 0.6s ease-out forwards opacity-0',
+              }}
+            >
               {isSignedIn ? (
                 <Link href={`/chat/${agent.id}`}>
                   <AgentCard agent={agent} />
@@ -245,45 +233,14 @@ export default function AgentGallery() {
           ))}
         </div>
       ) : (
-        <div className='text-center py-12'>
+        <div className='text-center py-12 animate-fade-in'>
           <p className='text-gray-500 text-lg mb-4'>
             {selectedCategory === 'Todas'
               ? 'No hay agentes disponibles en este momento'
               : `No hay agentes en la categoría "${selectedCategory}"`}
           </p>
-          <p className='text-gray-400 mb-4'>
-            {selectedCategory !== 'Todas' && (
-              <>
-                <button
-                  onClick={() => setSelectedCategory('Todas')}
-                  className='text-blue-600 hover:text-blue-700 underline mr-4'
-                >
-                  Ver todos los agentes
-                </button>
-                •
-              </>
-            )}
-            Los administradores pueden agregar agentes desde el panel de admin
-          </p>
-          <button
-            onClick={loadData}
-            className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700'
-          >
-            Recargar
-          </button>
         </div>
       )}
-
-      {/* Footer */}
-      <div className='text-center mt-12 p-6 bg-gray-50 rounded-lg'>
-        <p className='text-gray-600 mb-2'>
-          <strong>¿Cómo funciona?</strong>
-        </p>
-        <p className='text-sm text-gray-500'>
-          1. Creá tu cuenta gratuita • 2. Elegí el agente ideal • 3. Chateá como
-          si fuera una consultoría
-        </p>
-      </div>
     </div>
   );
 }
