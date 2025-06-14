@@ -395,28 +395,29 @@ export default function ChatInterface({ agent }) {
               disabled={isLoading}
             />
             <button
+              data-send-button
               onClick={sendMessage}
               disabled={isLoading || !inputMessage.trim()}
-              className='absolute bottom-2 right-2 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors'
+              className='absolute bottom-2 right-2 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200'
             >
               {isLoading ? (
-                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                <i className='fas fa-spinner fa-spin text-sm'></i>
               ) : (
-                <svg
-                  className='w-4 h-4'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 19l9 2-9-18-9 18 9-2zm0 0v-8'
-                  />
-                </svg>
+                <i className='fas fa-paper-plane text-sm'></i>
               )}
             </button>
+            // Y el botón de reset:
+            {isResetting ? (
+              <>
+                <i className='fas fa-spinner fa-spin mr-2'></i>
+                <span>Reseteando...</span>
+              </>
+            ) : (
+              <>
+                <i className='fas fa-redo mr-2'></i>
+                <span>Nueva conversación</span>
+              </>
+            )}
           </div>
 
           <div className='mt-2 text-xs text-gray-500 text-center'>

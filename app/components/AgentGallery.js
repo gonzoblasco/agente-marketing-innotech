@@ -2,16 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useUser, SignInButton } from '@clerk/nextjs';
-import {
-  getAgentsByCategory,
-  getUniqueCategories,
-  isUserAdmin,
-} from '../lib/supabase';
+import { getAgentsByCategory, isUserAdmin } from '../lib/supabase';
 import { getCategoryStyles } from '../lib/categories';
 import AgentCard from './AgentCard';
 import Link from 'next/link';
 
-// Componente para botón de admin
+// Componente AdminButton con Font Awesome
 function AdminButton({ userId }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -41,7 +37,8 @@ function AdminButton({ userId }) {
       href='/admin'
       className='inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium mr-3'
     >
-      ⚙️ Administración
+      <i className='fas fa-cog mr-2'></i>
+      Administración
     </Link>
   );
 }
@@ -194,34 +191,37 @@ export default function AgentGallery() {
 
   return (
     <div className='max-w-6xl mx-auto px-4 py-8'>
-      {/* Header optimizado */}
+      {/* Header */}
       {isSignedIn ? (
         <div className='flex items-center justify-between mb-6'>
           <div>
             <h1 className='text-2xl font-bold text-gray-800'>
-              ¡Hola {user.firstName}! 👋
+              <i className='fas fa-hand-wave mr-2 text-yellow-500'></i>
+              ¡Hola {user.firstName}!
             </h1>
             <p className='text-gray-600'>
-              {totalAgents} agentes disponibles en {categoriesCount} categorías
+              <i className='fas fa-robot mr-1'></i>
+              {totalAgents} agentes disponibles en
+              <i className='fas fa-tags ml-1 mr-1'></i>
+              {categoriesCount} categorías
             </p>
           </div>
           <div className='flex items-center'>
-            {/* Botón Admin solo si es admin */}
             <AdminButton userId={user?.id} />
 
-            {/* Botón Mi Dashboard para todos */}
             <Link
               href='/dashboard'
               className='inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm'
             >
-              📊 Mi Dashboard
+              <i className='fas fa-chart-bar mr-2'></i>
+              Mi Dashboard
             </Link>
           </div>
         </div>
       ) : (
-        // Header para no logueados (sin cambios)
         <div className='text-center mb-8'>
           <h1 className='text-4xl font-bold text-gray-800 mb-4'>
+            <i className='fas fa-play mr-3 text-red-500'></i>
             Netflix de Agentes Conversacionales
           </h1>
           <p className='text-xl text-gray-600 mb-2'>
@@ -229,15 +229,20 @@ export default function AgentGallery() {
             independientes
           </p>
           <p className='text-sm text-gray-500'>
-            {totalAgents} agentes especializados en {categoriesCount} categorías
+            <i className='fas fa-robot mr-1'></i>
+            {totalAgents} agentes especializados en
+            <i className='fas fa-tags ml-1 mr-1'></i>
+            {categoriesCount} categorías
           </p>
 
           <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6 inline-block'>
             <p className='text-blue-800 mb-3'>
+              <i className='fas fa-sign-in-alt mr-2'></i>
               Iniciá sesión para acceder a todos los agentes especializados
             </p>
             <SignInButton>
               <button className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium'>
+                <i className='fas fa-user-plus mr-2'></i>
                 Crear Cuenta Gratis
               </button>
             </SignInButton>
@@ -245,7 +250,7 @@ export default function AgentGallery() {
         </div>
       )}
 
-      {/* Filtros por categoría */}
+      {/* Filtros con Font Awesome */}
       <div className='mb-8'>
         <div className='flex flex-wrap justify-center gap-2'>
           {categories.map((category) => {
@@ -267,10 +272,14 @@ export default function AgentGallery() {
                 }`}
               >
                 {category === 'Todas' ? (
-                  <>🔍 {category}</>
+                  <>
+                    <i className='fas fa-search mr-2'></i>
+                    {category}
+                  </>
                 ) : (
                   <>
-                    {categoryStyles?.icon} {category}
+                    <i className={`${categoryStyles?.icon} mr-2`}></i>
+                    {category}
                   </>
                 )}
                 <span className='ml-1 text-xs opacity-75'>({agentCount})</span>
@@ -283,14 +292,14 @@ export default function AgentGallery() {
       {/* Grid de agentes */}
       {agents.length > 0 ? (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {agents.map((agent, index) => (
+          {agents.map((agent) => (
             <div key={agent.id} className='group block'>
               {isSignedIn ? (
                 <Link href={`/chat/${agent.id}`}>
                   <AgentCard agent={agent} />
                 </Link>
               ) : (
-                <div className='cursor-pointer' onClick={() => {}}>
+                <div className='cursor-pointer'>
                   <AgentCard agent={agent} locked={true} />
                 </div>
               )}
@@ -299,43 +308,29 @@ export default function AgentGallery() {
         </div>
       ) : (
         <div className='text-center py-12'>
+          <i className='fas fa-exclamation-triangle text-4xl text-gray-400 mb-4'></i>
           <p className='text-gray-500 text-lg mb-4'>
             {selectedCategory === 'Todas'
               ? 'No hay agentes disponibles en este momento'
               : `No hay agentes en la categoría "${selectedCategory}"`}
           </p>
-          <p className='text-gray-400 mb-4'>
-            {selectedCategory !== 'Todas' && (
-              <>
-                <button
-                  onClick={() => setSelectedCategory('Todas')}
-                  className='text-blue-600 hover:text-blue-700 underline mr-4'
-                >
-                  Ver todos los agentes
-                </button>
-                •
-              </>
-            )}
-            Los administradores pueden agregar agentes desde el panel de admin
-          </p>
-          <button
-            onClick={loadData}
-            className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700'
-          >
-            Recargar
-          </button>
         </div>
       )}
 
-      {/* Footer optimizado */}
+      {/* Footer para no logueados */}
       {!isSignedIn && (
         <div className='text-center mt-12 p-6 bg-gray-50 rounded-lg'>
           <p className='text-gray-600 mb-2'>
+            <i className='fas fa-question-circle mr-2'></i>
             <strong>¿Cómo funciona?</strong>
           </p>
           <p className='text-sm text-gray-500'>
-            1. Creá tu cuenta gratuita • 2. Elegí el agente ideal • 3. Chateá
-            como si fuera una consultoría
+            <i className='fas fa-user-plus mr-1'></i>
+            1. Creá tu cuenta gratuita •
+            <i className='fas fa-mouse-pointer ml-2 mr-1'></i>
+            2. Elegí el agente ideal •
+            <i className='fas fa-comments ml-2 mr-1'></i>
+            3. Chateá como si fuera una consultoría
           </p>
         </div>
       )}

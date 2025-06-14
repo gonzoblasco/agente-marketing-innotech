@@ -230,7 +230,17 @@ export default function PricingClient() {
                 onClick={() => handleUpgrade(plan.id)}
                 className={`w-full bg-gradient-to-r ${plan.gradient} text-white py-4 px-6 rounded-xl font-semibold text-lg`}
               >
-                Actualizar a {plan.name}
+                {loading === plan.id ? (
+                  <>
+                    <i className='fas fa-spinner fa-spin mr-2'></i>
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <i className='fas fa-credit-card mr-2'></i>
+                    Actualizar a {plan.name}
+                  </>
+                )}
               </LoadingButton>
 
               <p className='text-xs text-gray-500 text-center mt-3'>

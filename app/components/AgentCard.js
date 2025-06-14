@@ -163,7 +163,7 @@ export default function AgentCard({ agent, locked = false }) {
               : 'transform translate-y-1 opacity-80'
           }`}
         >
-          {/* Badge de categoría SOLO en el footer */}
+          {/* Badge de categoría con Font Awesome */}
           <div className='flex items-center'>
             <span
               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
@@ -172,7 +172,7 @@ export default function AgentCard({ agent, locked = false }) {
                 isHovered ? 'scale-105' : ''
               }`}
             >
-              <span className='mr-1'>{categoryStyles.icon}</span>
+              <i className={`${categoryStyles.icon} mr-1`}></i>
               {agent.category || 'Sin Categoría'}
             </span>
           </div>
@@ -183,37 +183,18 @@ export default function AgentCard({ agent, locked = false }) {
           >
             {locked ? (
               <span className='flex items-center'>
-                <svg
-                  className='w-4 h-4 mr-1'
-                  fill='currentColor'
-                  viewBox='0 0 20 20'
-                >
-                  <path
-                    fillRule='evenodd'
-                    d='M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z'
-                    clipRule='evenodd'
-                  />
-                </svg>
+                <i className='fas fa-lock mr-1'></i>
                 Iniciar sesión
               </span>
             ) : (
               <span className='flex items-center'>
+                <i className='fas fa-comments mr-1'></i>
                 Chatear
-                <svg
-                  className={`ml-1 w-4 h-4 transition-all duration-300 ${
+                <i
+                  className={`fas fa-arrow-right ml-1 transition-all duration-300 ${
                     isHovered ? 'translate-x-1 scale-110' : ''
                   }`}
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M9 5l7 7-7 7'
-                  />
-                </svg>
+                ></i>
               </span>
             )}
           </div>
