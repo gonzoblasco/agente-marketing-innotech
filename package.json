@@ -20,5 +20,10 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

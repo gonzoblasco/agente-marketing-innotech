@@ -110,7 +110,7 @@ export async function POST(request) {
     }));
 
     try {
-      // 🤖 LLAMADA AL MODELO SELECCIONADO
+      // 🤖 LLAMADA AL MODELO SELECCIONADO (que ahora siempre será Claude)
       const modelResponse = await callLLM({
         modelConfig: selectedModel,
         messages: modelMessages,
@@ -152,56 +152,12 @@ export async function POST(request) {
     } catch (modelError) {
       console.error(`❌ Error con modelo ${selectedModel.name}:`, modelError);
 
-      // 🔄 FALLBACK STRATEGY: Intentar con DeepSeek Chat como backup
-      try {
-        console.log('🔄 Intentando fallback con DeepSeek Chat...');
-
-        const { LLM_MODELS } = await import('../../lib/llm-router');
-        const fallbackModel = LLM_MODELS.DEEPSEEK_CHAT;
-
-        const fallbackResponse = await callLLM({
-          modelConfig: fallbackModel,
-          messages: modelMessages,
-          systemPrompt: agent.system_prompt,
-          maxTokens: 2000, // Reducido para fallback
-          temperature: 0.7,
-        });
-
-        const assistantMessage = fallbackResponse.message;
-
-        // Guardar respuesta con nota de fallback
-        await saveMessage(conversation.id, 'assistant', assistantMessage, {
-          model_used: fallbackModel.id,
-          model_name: fallbackModel.name + ' (fallback)',
-          tokens_used: fallbackResponse.usage,
-          response_time: fallbackResponse.duration,
-          fallback: true,
-          original_model_error: selectedModel.name,
-        });
-
-        const updatedStats = await getUserStats(user.id);
-        const remainingMessages =
-          updatedStats.messages_limit - updatedStats.messages_used;
-
-        console.log(`✅ Fallback exitoso con ${fallbackModel.name}`);
-
-        return NextResponse.json({
-          message: assistantMessage,
-          model_used: {
-            id: fallbackModel.id,
-            name: fallbackModel.name,
-            provider: fallbackModel.provider,
-            fallback: true,
-          },
-          usage: fallbackResponse.usage,
-          remaining_messages: remainingMessages,
-          response_time: fallbackResponse.duration,
-          warning: 'Se usó un modelo alternativo debido a un error técnico',
-        });
-      } catch (fallbackError) {
-        console.error('❌ Fallback también falló:', fallbackError);
-        throw new Error('Todos los modelos LLM fallaron. Intenta nuevamente.');
-      }
+      // --- LÓGICA DE FALLBACK MODIFICADA ---
+      // Se elimina el intento de fallback a Deepseek ya que no está funcionando.
+      // Se lanza un error directamente para ser capturado por el manejador general.
+      throw new Error(
+        `El modelo principal (${selectedModel.name}) falló y no hay un fallback activo.`
+      );
     }
   } catch (error) {
     console.error('💥 Error general en API:', error);
@@ -225,7 +181,8 @@ export async function POST(request) {
     return NextResponse.json(
       {
         error: 'Error interno del servidor',
-        message: 'Hubo un problema técnico. Por favor, intentá nuevamente.',
+        message:
+          'Disculpá, estamos experimentando problemas técnicos con nuestro proveedor de IA. Por favor, intentá nuevamente en unos momentos.', // Mensaje más específico
         details:
           process.env.NODE_ENV === 'development' ? error.message : undefined,
       },

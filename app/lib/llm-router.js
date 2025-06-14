@@ -449,12 +449,22 @@ export function selectBestModel({
   userPlan = 'lite',
   agentId = 'general',
 }) {
-  return llmRouter.routeRequest({
+  // --- INICIO DE LA MODIFICACIÓN TEMPORAL ---
+  // Se fuerza el uso de Claude Sonnet debido a que Deepseek no está funcionando.
+  // Este cambio es fácilmente reversible eliminando las siguientes 2 líneas.
+  console.log('🚧 MODIFICACIÓN TEMPORAL: Forzando el uso de Claude Sonnet.');
+  const { LLM_MODELS } = require('./llm-router');
+  return LLM_MODELS.CLAUDE_SONNET;
+  // --- FIN DE LA MODIFICACIÓN TEMPORAL ---
+
+  // El código de enrutamiento original se conserva debajo, pero no se ejecutará.
+  /* return llmRouter.routeRequest({
     message,
     conversationHistory,
     userPlan,
     agentType: agentId,
   });
+  */
 }
 
 /**
