@@ -11,7 +11,7 @@ export const metadata = {
     template: '%s | InnoTech Solutions',
   },
   description:
-    'La primera plataforma que permite acceder a un catálogo de agentes de IA especializados para emprendedores y PyMEs latinos. Consultorías expertas instantáneas.',
+    'La primera plataforma que permite acceder a un catálogo de agentes de IA especializados para emprendedores y PyMEs latinos.',
   keywords: [
     'agentes de IA',
     'inteligencia artificial',
@@ -82,25 +82,19 @@ export default function RootLayout({ children }) {
     >
       <html lang='es-AR'>
         <head>
-          {/* Favicon mejorado */}
-          <link rel='icon' href='/favicon.ico' />
+          {/* Solo favicon básico */}
           <link
-            rel='apple-touch-icon'
-            sizes='180x180'
-            href='/apple-touch-icon.png'
+            rel='icon'
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>"
           />
 
-          {/* PWA */}
+          {/* PWA básico SIN íconos */}
           <link rel='manifest' href='/manifest.json' />
           <meta name='theme-color' content='#3B82F6' />
 
-          {/* Geo-targeting Argentina */}
+          {/* Geo-targeting */}
           <meta name='geo.region' content='AR-C' />
           <meta name='geo.placename' content='Buenos Aires' />
-
-          {/* Performance hints */}
-          <link rel='preconnect' href='https://fonts.googleapis.com' />
-          <link rel='preconnect' href='https://api.anthropic.com' />
         </head>
         <body className={inter.className}>{children}</body>
       </html>

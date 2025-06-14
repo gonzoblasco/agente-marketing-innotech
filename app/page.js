@@ -5,7 +5,7 @@ import Link from 'next/link';
 export const metadata = {
   title: 'InnoTech Solutions - Netflix de Agentes Conversacionales para PyMEs',
   description:
-    'Accedé a un catálogo de agentes de IA especializados para PyMEs, emprendedores y profesionales independientes argentinos. Desde marketing hasta asesoría legal.',
+    'Accedé a un catálogo de agentes de IA especializados para PyMEs, emprendedores y profesionales independientes argentinos.',
   openGraph: {
     title: 'InnoTech Solutions - Agentes de IA para PyMEs Argentinas',
     description:
@@ -109,13 +109,29 @@ export default function Home() {
         }}
       />
 
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'InnoTech Solutions',
+            description:
+              'Netflix de Agentes Conversacionales para PyMEs argentinas',
+          }),
+        }}
+      />
+
       <main className='min-h-screen bg-gray-50'>
-        {/* Header con autenticación */}
+        {/* Header SIN Dashboard redundante */}
         <div className='bg-white shadow-sm border-b'>
           <div className='max-w-6xl mx-auto px-4 py-4 flex justify-between items-center'>
-            <h1 className='text-2xl font-bold text-gray-800'>
+            <Link
+              href='/'
+              className='text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors'
+            >
               🚀 InnoTech Solutions
-            </h1>
+            </Link>
 
             <div className='flex items-center space-x-4'>
               <SignedOut>
@@ -128,13 +144,15 @@ export default function Home() {
 
               <SignedIn>
                 <div className='flex items-center space-x-4'>
-                  <Link
-                    href='/dashboard'
-                    className='text-blue-600 hover:text-blue-700 font-medium'
-                  >
-                    Dashboard
-                  </Link>
-                  <UserButton afterSignOutUrl='/' />
+                  {/* Solo UserButton - sin Dashboard ni Admin aquí */}
+                  <UserButton
+                    afterSignOutUrl='/'
+                    appearance={{
+                      elements: {
+                        avatarBox: 'w-8 h-8',
+                      },
+                    }}
+                  />
                 </div>
               </SignedIn>
             </div>

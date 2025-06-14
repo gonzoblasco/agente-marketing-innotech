@@ -7,9 +7,11 @@ import { getCategoryStyles } from '../lib/categories';
 export default function AgentCard({ agent, locked = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Obtener estilos de categoría
   const categoryStyles = getCategoryStyles(agent.category || 'Sin Categoría');
 
-  // Función para obtener clases de color - simplificado a gris para locked
+  // Función para obtener clases de color
   const getChatButtonClasses = () => {
     if (locked) return 'text-gray-400';
     return 'text-blue-600 hover:text-blue-700';
@@ -26,6 +28,9 @@ export default function AgentCard({ agent, locked = false }) {
     return agent.description.substring(0, 120) + '...';
   };
 
+  // USAR EL GRADIENT DE LA CATEGORÍA, NO DEL AGENTE
+  const cardGradient = categoryStyles.gradient || 'from-gray-500 to-gray-700';
+
   return (
     <div
       className={`relative group border rounded-2xl overflow-hidden shadow-sm transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
@@ -34,11 +39,9 @@ export default function AgentCard({ agent, locked = false }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Header con gradiente y efectos de hover */}
+      {/* Header con gradiente de CATEGORÍA */}
       <div
-        className={`bg-gradient-to-r ${
-          agent.gradient || categoryStyles.gradient
-        } p-6 text-white relative overflow-hidden`}
+        className={`bg-gradient-to-r ${cardGradient} p-6 text-white relative overflow-hidden`}
       >
         {/* Efecto de hover sutil */}
         <div
@@ -66,14 +69,14 @@ export default function AgentCard({ agent, locked = false }) {
             <svg className='w-4 h-4' fill='currentColor' viewBox='0 0 20 20'>
               <path
                 fillRule='evenodd'
-                d='M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z'
+                d='M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z'
                 clipRule='evenodd'
               />
             </svg>
           </div>
         )}
 
-        {/* Contenido principal del header */}
+        {/* Contenido principal del header - SIN BADGE */}
         <div className='flex items-center mb-3 relative z-10'>
           <span
             className={`text-3xl mr-3 transition-all duration-300 ${
@@ -82,7 +85,7 @@ export default function AgentCard({ agent, locked = false }) {
           >
             {agent.emoji}
           </span>
-          <div>
+          <div className='flex-1'>
             <h3 className='font-bold text-lg transition-all duration-300'>
               {agent.name}
             </h3>
@@ -92,16 +95,7 @@ export default function AgentCard({ agent, locked = false }) {
           </div>
         </div>
 
-        {/* Badge de categoría flotante */}
-        <div className='absolute bottom-2 right-2 relative z-10'>
-          <span
-            className={`text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm bg-white bg-opacity-20 border border-white border-opacity-30 transition-all duration-300 ${
-              isHovered ? 'scale-105 bg-opacity-30' : ''
-            }`}
-          >
-            {categoryStyles.icon} {agent.category || 'Sin Categoría'}
-          </span>
-        </div>
+        {/* QUITAR el badge del header - ya no lo necesitamos */}
       </div>
 
       {/* Contenido principal */}
@@ -169,7 +163,7 @@ export default function AgentCard({ agent, locked = false }) {
               : 'transform translate-y-1 opacity-80'
           }`}
         >
-          {/* Información de categoría */}
+          {/* Badge de categoría SOLO en el footer */}
           <div className='flex items-center'>
             <span
               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
@@ -228,9 +222,7 @@ export default function AgentCard({ agent, locked = false }) {
 
       {/* Overlay de hover para efecto visual adicional */}
       <div
-        className={`absolute inset-0 bg-gradient-to-r ${
-          agent.gradient || categoryStyles.gradient
-        } transition-opacity duration-300 pointer-events-none ${
+        className={`absolute inset-0 bg-gradient-to-r ${cardGradient} transition-opacity duration-300 pointer-events-none ${
           isHovered && !locked ? 'opacity-5' : 'opacity-0'
         }`}
       ></div>
@@ -250,13 +242,23 @@ export default function AgentCard({ agent, locked = false }) {
         </div>
       )}
 
-      {/* Efecto de border hover */}
+      {/* Efecto de border hover usando el color de la categoría */}
       <div
         className={`absolute inset-0 rounded-2xl border-2 transition-all duration-300 pointer-events-none ${
           isHovered && !locked
-            ? `border-blue-400 border-opacity-50 shadow-lg shadow-blue-400/20`
+            ? `border-opacity-50 shadow-lg`
             : 'border-transparent'
         }`}
+        style={{
+          borderColor:
+            isHovered && !locked
+              ? categoryStyles.color || '#3B82F6'
+              : 'transparent',
+          boxShadow:
+            isHovered && !locked
+              ? `0 10px 25px -5px ${categoryStyles.color || '#3B82F6'}20`
+              : 'none',
+        }}
       ></div>
     </div>
   );
