@@ -380,50 +380,138 @@ export default function ChatInterface({ agent }) {
         </div>
       </div>
 
-      {/* Input area */}
+      {/* Input area mejorado - estilo Claude */}
       <div className='flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4'>
         <div className='max-w-4xl mx-auto'>
-          <div className='relative'>
-            <textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={`Mensaje a ${agentName}...`}
-              className='w-full resize-none rounded-2xl border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-h-32 min-h-[52px]'
-              rows={1}
-              disabled={isLoading}
-            />
-            <button
-              data-send-button
-              onClick={sendMessage}
-              disabled={isLoading || !inputMessage.trim()}
-              className='absolute bottom-2 right-2 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200'
-            >
-              {isLoading ? (
-                <i className='fas fa-spinner fa-spin text-sm'></i>
-              ) : (
-                <i className='fas fa-paper-plane text-sm'></i>
-              )}
-            </button>
-            // Y el botón de reset:
-            {isResetting ? (
-              <>
-                <i className='fas fa-spinner fa-spin mr-2'></i>
-                <span>Reseteando...</span>
-              </>
-            ) : (
-              <>
-                <i className='fas fa-redo mr-2'></i>
-                <span>Nueva conversación</span>
-              </>
-            )}
+          {/* Container principal del input */}
+          <div className='relative flex items-end bg-white border border-gray-300 rounded-3xl shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500'>
+            {/* Botones izquierda */}
+            <div className='flex items-center pl-4 pr-2 py-3'>
+              {/* Botón + (agregar archivo) */}
+              <button
+                className='flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                disabled={true}
+                title='Adjuntar archivo (próximamente)'
+              >
+                <svg
+                  className='w-5 h-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+                  />
+                </svg>
+              </button>
+
+              {/* Botón historial */}
+              <button
+                className='flex items-center justify-center w-8 h-8 ml-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                disabled={true}
+                title='Historial (próximamente)'
+              >
+                <svg
+                  className='w-5 h-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Textarea */}
+            <div className='flex-1 min-h-0'>
+              <textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={`Mensaje a ${agentName}...`}
+                className='w-full resize-none border-0 bg-transparent px-0 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 max-h-32 min-h-0'
+                rows={1}
+                disabled={isLoading}
+                style={{
+                  height: 'auto',
+                  minHeight: '24px',
+                  lineHeight: '24px',
+                }}
+              />
+            </div>
+
+            {/* Botones derecha */}
+            <div className='flex items-center pr-3 pl-2 py-3'>
+              {/* Botón investigación (desactivado) */}
+              <button
+                className='flex items-center justify-center w-8 h-8 mr-2 text-gray-300 cursor-not-allowed'
+                disabled={true}
+                title='Investigación (próximamente)'
+              >
+                <svg
+                  className='w-5 h-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                  />
+                </svg>
+                <span className='ml-1 text-xs text-gray-300'>BETA</span>
+              </button>
+
+              {/* Botón enviar */}
+              <button
+                data-send-button
+                onClick={sendMessage}
+                disabled={isLoading || !inputMessage.trim()}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${
+                  isLoading || !inputMessage.trim()
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105'
+                }`}
+              >
+                {isLoading ? (
+                  <div className='w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin'></div>
+                ) : (
+                  <svg
+                    className='w-4 h-4'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M12 19l9 2-9-18-9 18 9-2zm0 0v-8'
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
+          {/* Footer con instrucciones */}
           <div className='mt-2 text-xs text-gray-500 text-center'>
-            <kbd className='bg-gray-100 px-2 py-1 rounded text-xs'>Enter</kbd>{' '}
+            <kbd className='bg-gray-100 px-2 py-1 rounded text-xs font-mono'>
+              Enter
+            </kbd>{' '}
             para enviar •{' '}
-            <kbd className='bg-gray-100 px-2 py-1 rounded text-xs'>
+            <kbd className='bg-gray-100 px-2 py-1 rounded text-xs font-mono'>
               Shift+Enter
             </kbd>{' '}
             para nueva línea
@@ -478,73 +566,6 @@ export default function ChatInterface({ agent }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function ChatInputWithLoading({ onSendMessage, disabled }) {
-  const [message, setMessage] = useState('');
-  const [sending, setSending] = useState(false);
-
-  const handleSend = async () => {
-    if (!message.trim() || sending) return;
-
-    setSending(true);
-    try {
-      await onSendMessage(message);
-      setMessage('');
-
-      // Success feedback visual
-      const button = document.querySelector('[data-send-button]');
-      if (button) {
-        button.style.background = '#10B981';
-        setTimeout(() => {
-          button.style.background = '';
-        }, 500);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      // Error se maneja en el componente padre
-    } finally {
-      setSending(false);
-    }
-  };
-
-  return (
-    <div className='relative'>
-      <textarea
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-        placeholder='Escribí tu mensaje...'
-        className='w-full resize-none rounded-2xl border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-h-32 min-h-[52px]'
-        rows={1}
-        disabled={sending || disabled}
-      />
-      <button
-        data-send-button
-        onClick={sendMessage}
-        disabled={isLoading || !inputMessage.trim()}
-        className='absolute bottom-2 right-2 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200'
-      >
-        {isLoading ? (
-          <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-        ) : (
-          <svg
-            className='w-4 h-4'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M12 19l9 2-9-18-9 18 9-2zm0 0v-8'
-            />
-          </svg>
-        )}
-      </button>
     </div>
   );
 }

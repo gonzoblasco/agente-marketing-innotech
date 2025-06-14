@@ -1,5 +1,5 @@
 import AgentGallery from './components/AgentGallery';
-import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import Link from 'next/link';
 
 export const metadata = {
@@ -123,7 +123,7 @@ export default function Home() {
       />
 
       <main className='min-h-screen bg-gray-50'>
-        {/* Header SIN Dashboard redundante */}
+        {/* Header CORREGIDO - sin botones de auth duplicados */}
         <div className='bg-white shadow-sm border-b'>
           <div className='max-w-6xl mx-auto px-4 py-4 flex justify-between items-center'>
             <Link
@@ -133,29 +133,7 @@ export default function Home() {
               🚀 InnoTech Solutions
             </Link>
 
-            <div className='flex items-center space-x-4'>
-              <SignedOut>
-                <SignInButton mode='modal'>
-                  <button className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'>
-                    Iniciar Sesión
-                  </button>
-                </SignInButton>
-              </SignedOut>
-
-              <SignedIn>
-                <div className='flex items-center space-x-4'>
-                  {/* Solo UserButton - sin Dashboard ni Admin aquí */}
-                  <UserButton
-                    afterSignOutUrl='/'
-                    appearance={{
-                      elements: {
-                        avatarBox: 'w-8 h-8',
-                      },
-                    }}
-                  />
-                </div>
-              </SignedIn>
-            </div>
+            {/* REMOVED AUTH BUTTONS - Ya están manejados en AgentGallery */}
           </div>
         </div>
 

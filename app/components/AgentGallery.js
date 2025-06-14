@@ -44,9 +44,9 @@ function AdminButton({ userId }) {
 }
 
 export default function AgentGallery() {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
   const [agents, setAgents] = useState([]);
-  const [allAgents, setAllAgents] = useState([]); // ⭐ NUEVO: Guardar todos los agentes
+  const [allAgents, setAllAgents] = useState([]);
   const [categories, setCategories] = useState(['Todas']);
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [loading, setLoading] = useState(true);
@@ -67,10 +67,8 @@ export default function AgentGallery() {
 
       console.log('🔄 Loading categories and agents...');
 
-      // ⭐ CAMBIO: Cargar TODOS los agentes una sola vez
-      const allAgentsData = await getAgentsByCategory(null); // null = todos
+      const allAgentsData = await getAgentsByCategory(null);
 
-      // ⭐ NUEVO: Ordenar alfabéticamente por nombre
       const sortedAgents = (allAgentsData || []).sort((a, b) =>
         (a.name || '').localeCompare(b.name || '', 'es', {
           sensitivity: 'base',
@@ -79,7 +77,6 @@ export default function AgentGallery() {
 
       setAllAgents(sortedAgents);
 
-      // Obtener categorías únicas de todos los agentes
       const uniqueCategories = [
         ...new Set(
           sortedAgents.map((agent) => agent.category || 'Sin Categoría')
@@ -87,8 +84,6 @@ export default function AgentGallery() {
       ].sort();
 
       setCategories(['Todas', ...uniqueCategories]);
-
-      // Cargar agentes iniciales (todos, ya ordenados)
       setAgents(sortedAgents);
     } catch (error) {
       console.error('💥 Exception loading data:', error);
@@ -102,7 +97,6 @@ export default function AgentGallery() {
     try {
       console.log(`🔄 Loading agents for category: ${selectedCategory}`);
 
-      // ⭐ CAMBIO: Filtrar localmente en lugar de hacer nueva consulta
       let filteredAgents;
       if (selectedCategory === 'Todas') {
         filteredAgents = allAgents;
@@ -112,7 +106,6 @@ export default function AgentGallery() {
         );
       }
 
-      // ⭐ NUEVO: Ordenar alfabéticamente los agentes filtrados también
       const sortedFilteredAgents = filteredAgents.sort((a, b) =>
         (a.name || '').localeCompare(b.name || '', 'es', {
           sensitivity: 'base',
@@ -134,7 +127,6 @@ export default function AgentGallery() {
     setSelectedCategory(category);
   };
 
-  // ⭐ CAMBIO: Función para contar agentes por categoría usando allAgents
   const getAgentCountForCategory = (category) => {
     if (category === 'Todas') {
       return allAgents.length;
@@ -143,12 +135,29 @@ export default function AgentGallery() {
   };
 
   const getAgentStats = () => {
-    const totalAgents = allAgents.length; // ⭐ CAMBIO: Usar allAgents
-    const categoriesCount = categories.length - 1; // Excluir "Todas"
+    const totalAgents = allAgents.length;
+    const categoriesCount = categories.length - 1;
     return { totalAgents, categoriesCount };
   };
 
   const { totalAgents, categoriesCount } = getAgentStats();
+
+  // 🚀 SOLUCIÓN SIMPLE: Solo mostrar loading mientras Clerk no esté listo
+  if (!isLoaded) {
+    return (
+      <div className='max-w-6xl mx-auto px-4 py-8'>
+        <div className='text-center mb-12'>
+          <h1 className='text-4xl font-bold text-gray-800 mb-4'>
+            Netflix de Agentes Conversacionales
+          </h1>
+          <p className='text-xl text-gray-600 mb-2'>Inicializando...</p>
+        </div>
+        <div className='flex justify-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -191,8 +200,9 @@ export default function AgentGallery() {
 
   return (
     <div className='max-w-6xl mx-auto px-4 py-8'>
-      {/* Header */}
-      {isSignedIn ? (
+      {/* Header CON LÓGICA SIMPLE */}
+      {isSignedIn && user ? (
+        // ✅ USUARIO LOGUEADO
         <div className='flex items-center justify-between mb-6'>
           <div>
             <h1 className='text-2xl font-bold text-gray-800'>
@@ -219,6 +229,7 @@ export default function AgentGallery() {
           </div>
         </div>
       ) : (
+        // ❌ USUARIO NO LOGUEADO - SIN SignInButton
         <div className='text-center mb-8'>
           <h1 className='text-4xl font-bold text-gray-800 mb-4'>
             <i className='fas fa-play mr-3 text-red-500'></i>
@@ -240,12 +251,14 @@ export default function AgentGallery() {
               <i className='fas fa-sign-in-alt mr-2'></i>
               Iniciá sesión para acceder a todos los agentes especializados
             </p>
-            <SignInButton>
-              <button className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium'>
-                <i className='fas fa-user-plus mr-2'></i>
-                Crear Cuenta Gratis
-              </button>
-            </SignInButton>
+            {/* 🔧 BOTÓN PERSONALIZADO EN LUGAR DE SignInButton */}
+            <Link
+              href='/sign-in'
+              className='inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium'
+            >
+              <i className='fas fa-user-plus mr-2'></i>
+              Crear Cuenta Gratis
+            </Link>
           </div>
         </div>
       )}

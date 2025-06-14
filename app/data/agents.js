@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { getActiveAgents, isSupabaseConfigured } from '../lib/supabase';
 import { getColorFromCategory } from '../lib/categories';
 
 // Cache en memoria para mejor performance
@@ -74,6 +74,20 @@ Ejemplo: *"Tengo una panadería en Palermo y no sé cómo usar Instagram para ve
     welcome_message: `¡Hola! Soy tu mentor de productividad y entiendo perfectamente esa sensación de estar overwhelmed. 🧠`,
     is_active: true,
   },
+  {
+    id: 'estratega-fundraising',
+    name: 'Estratega de Fundraising',
+    title: 'Levantamiento de capital LATAM',
+    emoji: '💰',
+    description:
+      'Especialista en levantamiento de capital para startups latinoamericanas. Te ayudo con pitch decks, valuaciones, términos sheets y networking con inversores.',
+    category: 'Finanzas',
+    color: 'purple',
+    gradient: 'from-purple-500 to-purple-700',
+    system_prompt: `Sos un estratega de fundraising especializado en startups de LATAM.`,
+    welcome_message: `¡Hola! Soy tu estratega de fundraising especializado en el ecosistema de inversión latinoamericano. 💰`,
+    is_active: true,
+  },
 ];
 
 // Función para procesar agentes y aplicar estilos de categoría
@@ -103,27 +117,32 @@ async function fetchAgentsFromDB() {
   try {
     console.log('🔄 Fetching agents from Supabase...');
 
-    const { data, error } = await supabase
-      .from('agents')
-      .select('*')
-      .eq('is_active', true)
-      .order('category', { ascending: true })
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('❌ Supabase error:', error);
-      throw error;
+    // Verificar configuración de Supabase usando la función helper
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, using fallback agents');
+      return FALLBACK_AGENTS.map(processAgentWithCategory);
     }
 
-    console.log(`✅ Successfully fetched ${data?.length || 0} agents from BD`);
+    const agents = await getActiveAgents();
+
+    if (!agents || agents.length === 0) {
+      console.warn('⚠️ No agents returned from Supabase, using fallback');
+      return FALLBACK_AGENTS.map(processAgentWithCategory);
+    }
+
+    console.log(`✅ Successfully fetched ${agents.length} agents from BD`);
 
     // Procesar agentes para aplicar estilos de categoría
-    const processedAgents = (data || []).map(processAgentWithCategory);
+    const processedAgents = agents.map(processAgentWithCategory);
 
     return processedAgents;
   } catch (err) {
-    console.error('💥 Exception fetching agents from BD:', err);
-    console.log('🔄 Using fallback agents...');
+    console.error('💥 Exception fetching agents from BD:', {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+    });
+    console.log('🔄 Using fallback agents due to exception...');
     return FALLBACK_AGENTS.map(processAgentWithCategory);
   }
 }
@@ -165,7 +184,11 @@ export async function getAllAgents() {
 
     return validAgents;
   } catch (error) {
-    console.error('💥 Error in getAllAgents:', error);
+    console.error('💥 Error in getAllAgents:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    });
 
     // Usar fallback si todo falla
     console.log('🚨 Using fallback agents due to error');
@@ -194,11 +217,28 @@ export async function getAgent(agentId) {
       console.log(`✅ Found agent: ${agent.name} (${agent.category})`);
       return agent;
     } else {
-      console.log(`❌ Agent ${agentId} not found, using first available agent`);
-      return agents[0] || FALLBACK_AGENTS.map(processAgentWithCategory)[0];
+      console.log(`❌ Agent ${agentId} not found`);
+
+      // En lugar de devolver el primero, intentar buscar por nombre similar
+      const similarAgent = agents.find(
+        (a) => a.id.includes(agentId) || agentId.includes(a.id)
+      );
+
+      if (similarAgent) {
+        console.log(`🔄 Found similar agent: ${similarAgent.name}`);
+        return similarAgent;
+      }
+
+      console.log(`🔄 Using first available agent: ${agents[0]?.name}`);
+      return agents[0] || processAgentWithCategory(FALLBACK_AGENTS[0]);
     }
   } catch (error) {
-    console.error('💥 Error in getAgent:', error);
+    console.error('💥 Error in getAgent:', {
+      message: error.message,
+      name: error.name,
+      agentId,
+    });
+
     // En caso de error total, devolver el primer agente de fallback
     console.log('🚨 Using fallback agent due to error');
     return processAgentWithCategory(FALLBACK_AGENTS[0]);

@@ -105,7 +105,10 @@ export default function RootLayout({ children }) {
           <meta name='geo.region' content='AR-C' />
           <meta name='geo.placename' content='Buenos Aires' />
         </head>
-        <body className={inter.className}>{children}</body>
+        <body className={inter.className}>
+          {/* SOLO ClerkProvider - SIN botones de auth aquí */}
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );

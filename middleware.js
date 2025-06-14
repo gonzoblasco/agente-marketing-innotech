@@ -1,10 +1,25 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 // Rutas que requieren autenticación
-const isProtectedRoute = createRouteMatcher(['/chat/(.*)']);
+const isProtectedRoute = createRouteMatcher([
+  '/chat/(.*)',
+  '/dashboard(.*)',
+  '/admin(.*)',
+]);
+
+// Rutas públicas (no requieren autenticación)
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/pricing(.*)',
+  '/payment/(.*)',
+  '/api/webhooks/(.*)',
+]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
+  // Si es una ruta protegida y no es pública, requerir autenticación
+  if (isProtectedRoute(req) && !isPublicRoute(req)) {
     await auth.protect();
   }
 });
