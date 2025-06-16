@@ -1,77 +1,17 @@
 // app/lib/llm-router.js
-// Sistema inteligente de enrutamiento de modelos LLM para InnoTech Solutions
-// Basado en el análisis comparativo de modelos LLM 2025
+// Sistema inteligente de enrutamiento SIN DEEPSEEK (temporalmente)
+// Solo usando Claude 4 Sonnet y Gemini 2.5 Pro
 
 /**
- * CONFIGURACIÓN DE MODELOS LLM DISPONIBLES
- * Actualizados con precios reales de junio 2025
+ * CONFIGURACIÓN DE MODELOS LLM DISPONIBLES (SIN DEEPSEEK)
  */
 export const LLM_MODELS = {
-  // 🧠 DEEPSEEK - Para conversaciones habituales (súper económico)
-  DEEPSEEK_CHAT: {
-    id: 'deepseek-chat',
-    provider: 'deepseek',
-    name: 'DeepSeek Chat V3',
-    description:
-      'Modelo económico para conversaciones habituales y tareas generales',
-    pricing: {
-      input: 0.27, // $0.27 per 1M tokens
-      output: 1.1, // $1.10 per 1M tokens
-      cache: 0.07, // $0.07 per 1M tokens (75% descuento)
-    },
-    capabilities: {
-      reasoning: 'alto',
-      coding: 'alto',
-      multimodal: false,
-      contextWindow: 64000,
-      maxOutput: 8000,
-      languages: ['es', 'en', 'pt'],
-    },
-    strengths: ['Muy económico', 'Buena calidad general', 'Rápido'],
-    useCases: [
-      'Conversaciones generales',
-      'Consultas básicas',
-      'Tareas cotidianas',
-    ],
-  },
-
-  DEEPSEEK_REASONER: {
-    id: 'deepseek-reasoner',
-    provider: 'deepseek',
-    name: 'DeepSeek R1 Reasoner',
-    description:
-      'Modelo de razonamiento especializado para problemas complejos',
-    pricing: {
-      input: 0.55, // $0.55 per 1M tokens
-      output: 2.19, // $2.19 per 1M tokens
-      cache: 0.14, // $0.14 per 1M tokens
-    },
-    capabilities: {
-      reasoning: 'excepcional',
-      coding: 'excepcional',
-      multimodal: false,
-      contextWindow: 64000,
-      maxOutput: 8000,
-      languages: ['es', 'en', 'pt'],
-    },
-    strengths: [
-      'Razonamiento superior',
-      'Excelente coding',
-      'Chain-of-thought',
-    ],
-    useCases: [
-      'Problemas complejos',
-      'Debugging avanzado',
-      'Análisis profundo',
-    ],
-  },
-
-  // 🔮 CLAUDE 4 SONNET - Para razonamiento complejo (calidad premium)
+  // 🔮 CLAUDE 4 SONNET - Modelo principal para todo
   CLAUDE_SONNET: {
     id: 'claude-4-sonnet',
     provider: 'anthropic',
     name: 'Claude 4 Sonnet',
-    description: 'Modelo premium para razonamiento complejo y tareas críticas',
+    description: 'Modelo principal para conversaciones y tareas complejas',
     pricing: {
       input: 3.0, // $3.00 per 1M tokens
       output: 15.0, // $15.00 per 1M tokens
@@ -91,13 +31,13 @@ export const LLM_MODELS = {
       'Excelente seguimiento de instrucciones',
     ],
     useCases: [
-      'Análisis críticos',
-      'Refactoring complejo',
-      'Decisiones importantes',
+      'Conversaciones generales',
+      'Análisis complejos',
+      'Consultas especializadas',
     ],
   },
 
-  // 🌟 GEMINI 2.5 PRO - Para multimodal avanzado (futuro Elite)
+  // 🌟 GEMINI 2.5 PRO - Para multimodal y casos específicos (solo Plan Elite)
   GEMINI_PRO: {
     id: 'gemini-2.5-pro',
     provider: 'google',
@@ -130,69 +70,15 @@ export const LLM_MODELS = {
 };
 
 /**
- * CRITERIOS DE ENRUTAMIENTO INTELIGENTE
- */
-export const ROUTING_CRITERIA = {
-  // Palabras clave que indican complejidad alta
-  COMPLEX_REASONING_KEYWORDS: [
-    'analizar',
-    'evaluar',
-    'comparar',
-    'estrategia',
-    'planificar',
-    'refactorizar',
-    'debuggear',
-    'optimizar',
-    'diseñar',
-    'arquitectura',
-    'problema complejo',
-    'análisis profundo',
-    'decisión importante',
-    'revisar código',
-    'explicar detalladamente',
-  ],
-
-  // Palabras clave que indican necesidad multimodal
-  MULTIMODAL_KEYWORDS: [
-    'imagen',
-    'foto',
-    'video',
-    'audio',
-    'archivo',
-    'documento',
-    'analizar imagen',
-    'ver foto',
-    'revisar video',
-    'escuchar',
-    'multimedia',
-    'visual',
-    'gráfico',
-  ],
-
-  // Indicadores de conversación simple
-  SIMPLE_CONVERSATION_KEYWORDS: [
-    'hola',
-    'consulta rápida',
-    'pregunta simple',
-    'qué es',
-    'cómo está',
-    'gracias',
-    'ayuda básica',
-    'información general',
-  ],
-};
-
-/**
- * CLASE PRINCIPAL DEL ROUTER
+ * ROUTER SIMPLIFICADO SIN DEEPSEEK
  */
 export class LLMRouter {
   constructor() {
     this.models = LLM_MODELS;
-    this.criteria = ROUTING_CRITERIA;
   }
 
   /**
-   * Determina el mejor modelo para una solicitud específica
+   * Determina el mejor modelo (Claude o Gemini según el plan)
    */
   routeRequest({
     message,
@@ -213,7 +99,7 @@ export class LLMRouter {
       agentType,
     });
 
-    console.log('🤖 LLM Router Analysis:', analysis);
+    console.log('🤖 LLM Router Analysis (Sin DeepSeek):', analysis);
 
     return this.selectModel(analysis);
   }
@@ -258,8 +144,26 @@ export class LLMRouter {
   calculateComplexity(messageText, conversationHistory) {
     let score = 0;
 
-    // Palabras clave de complejidad alta (+20 puntos cada una)
-    this.criteria.COMPLEX_REASONING_KEYWORDS.forEach((keyword) => {
+    // Palabras clave de complejidad
+    const complexKeywords = [
+      'analizar',
+      'evaluar',
+      'comparar',
+      'estrategia',
+      'planificar',
+      'refactorizar',
+      'debuggear',
+      'optimizar',
+      'diseñar',
+      'arquitectura',
+      'problema complejo',
+      'análisis profundo',
+      'decisión importante',
+      'revisar código',
+      'explicar detalladamente',
+    ];
+
+    complexKeywords.forEach((keyword) => {
       if (messageText.includes(keyword)) {
         score += 20;
       }
@@ -292,9 +196,23 @@ export class LLMRouter {
    * Detecta si se necesita capacidad multimodal
    */
   detectMultimodalNeed(messageText) {
-    return this.criteria.MULTIMODAL_KEYWORDS.some((keyword) =>
-      messageText.includes(keyword)
-    );
+    const multimodalKeywords = [
+      'imagen',
+      'foto',
+      'video',
+      'audio',
+      'archivo',
+      'documento',
+      'analizar imagen',
+      'ver foto',
+      'revisar video',
+      'escuchar',
+      'multimedia',
+      'visual',
+      'gráfico',
+    ];
+
+    return multimodalKeywords.some((keyword) => messageText.includes(keyword));
   }
 
   /**
@@ -311,7 +229,7 @@ export class LLMRouter {
   }
 
   /**
-   * Selecciona el modelo más adecuado basado en el análisis
+   * Selecciona el modelo más adecuado (SOLO CLAUDE Y GEMINI)
    */
   selectModel(analysis) {
     const {
@@ -323,7 +241,7 @@ export class LLMRouter {
     } = analysis;
 
     console.log(
-      '🎯 Model Selection - Complexity:',
+      '🎯 Model Selection (Sin DeepSeek) - Complexity:',
       complexityScore,
       'Multimodal:',
       needsMultimodal,
@@ -331,34 +249,21 @@ export class LLMRouter {
       userPlan
     );
 
-    // 🚫 PLAN LITE: Solo DeepSeek (económico)
-    if (userPlan === 'lite') {
-      return complexityScore > 70
-        ? this.models.DEEPSEEK_REASONER
-        : this.models.DEEPSEEK_CHAT;
-    }
-
-    // 🌟 PLAN ELITE: Acceso a Gemini multimodal
+    // 🌟 PLAN ELITE: Puede usar Gemini para multimodal
     if (userPlan === 'elite' && needsMultimodal) {
+      console.log('🌟 Using Gemini Pro for Elite multimodal');
       return this.models.GEMINI_PRO;
     }
 
-    // 🔮 RAZONAMIENTO COMPLEJO: Claude para máxima calidad
-    if (
-      complexityScore > 80 ||
-      agentType === 'legal' ||
-      agentType === 'financiero'
-    ) {
-      return this.models.CLAUDE_SONNET;
+    // 🌟 PLAN ELITE: Usar Gemini para contexto muy largo (>100k tokens)
+    if (userPlan === 'elite' && contextLength > 100000) {
+      console.log('🌟 Using Gemini Pro for Elite long context');
+      return this.models.GEMINI_PRO;
     }
 
-    // 📊 COMPLEJIDAD MEDIA: DeepSeek Reasoner (buen balance)
-    if (complexityScore > 50) {
-      return this.models.DEEPSEEK_REASONER;
-    }
-
-    // 💬 DEFAULT: DeepSeek Chat (económico y eficiente)
-    return this.models.DEEPSEEK_CHAT;
+    // 🔮 DEFAULT: Claude Sonnet para todo lo demás
+    console.log('🔮 Using Claude Sonnet as default');
+    return this.models.CLAUDE_SONNET;
   }
 
   /**
@@ -392,47 +297,6 @@ export class LLMRouter {
       tokens: { input: inputTokens, output: outputTokens },
     };
   }
-
-  /**
-   * Obtiene estadísticas de uso y costos
-   */
-  getUsageStats(modelUsage = {}) {
-    const stats = {
-      totalRequests: 0,
-      totalCost: 0,
-      modelBreakdown: {},
-      recommendations: [],
-    };
-
-    Object.entries(modelUsage).forEach(([modelId, usage]) => {
-      const model = this.models[modelId];
-      if (model) {
-        const cost = this.calculateCost(
-          model,
-          usage.inputTokens,
-          usage.outputTokens
-        );
-
-        stats.totalRequests += usage.requests;
-        stats.totalCost += cost.totalCost;
-        stats.modelBreakdown[modelId] = {
-          requests: usage.requests,
-          cost: cost.totalCost,
-          model: model.name,
-        };
-      }
-    });
-
-    // Generar recomendaciones
-    if (stats.totalCost > 10) {
-      // Si gasta más de $10
-      stats.recommendations.push(
-        'Considera usar más DeepSeek para reducir costos'
-      );
-    }
-
-    return stats;
-  }
 }
 
 /**
@@ -449,61 +313,60 @@ export function selectBestModel({
   userPlan = 'lite',
   agentId = 'general',
 }) {
-  // --- INICIO DE LA MODIFICACIÓN TEMPORAL ---
-  // Se fuerza el uso de Claude Sonnet debido a que Deepseek no está funcionando.
-  // Este cambio es fácilmente reversible eliminando las siguientes 2 líneas.
-  console.log('🚧 MODIFICACIÓN TEMPORAL: Forzando el uso de Claude Sonnet.');
-  const { LLM_MODELS } = require('./llm-router');
-  return LLM_MODELS.CLAUDE_SONNET;
-  // --- FIN DE LA MODIFICACIÓN TEMPORAL ---
-
-  // El código de enrutamiento original se conserva debajo, pero no se ejecutará.
-  /* return llmRouter.routeRequest({
+  return llmRouter.routeRequest({
     message,
     conversationHistory,
     userPlan,
     agentType: agentId,
   });
-  */
 }
 
 /**
- * CONFIGURACIONES POR PLAN
+ * CONFIGURACIONES POR PLAN (SIN DEEPSEEK)
  */
 export const PLAN_CONFIGURATIONS = {
   lite: {
-    allowedModels: ['deepseek-chat', 'deepseek-reasoner'],
-    maxMonthlySpend: 5, // $5 USD máximo
-    defaultModel: 'deepseek-chat',
+    allowedModels: ['claude-4-sonnet'], // Solo Claude para Lite
+    maxMonthlySpend: 25, // $25 USD máximo
+    defaultModel: 'claude-4-sonnet',
+    description: 'Claude Sonnet para todas las consultas',
   },
   pro: {
-    allowedModels: ['deepseek-chat', 'deepseek-reasoner', 'claude-4-sonnet'],
-    maxMonthlySpend: 50, // $50 USD máximo
-    defaultModel: 'deepseek-chat',
+    allowedModels: ['claude-4-sonnet'], // Solo Claude para Pro también
+    maxMonthlySpend: 75, // $75 USD máximo
+    defaultModel: 'claude-4-sonnet',
+    description: 'Claude Sonnet optimizado para uso profesional',
   },
   elite: {
-    allowedModels: [
-      'deepseek-chat',
-      'deepseek-reasoner',
-      'claude-4-sonnet',
-      'gemini-2.5-pro',
-    ],
+    allowedModels: ['claude-4-sonnet', 'gemini-2.5-pro'], // Elite tiene ambos
     maxMonthlySpend: 200, // $200 USD máximo
-    defaultModel: 'deepseek-reasoner',
+    defaultModel: 'claude-4-sonnet',
+    description: 'Claude + Gemini para casos multimodales',
   },
 };
 
 /**
- * EJEMPLO DE USO:
+ * 💡 ESTRATEGIA SIN DEEPSEEK:
  *
- * import { selectBestModel } from './llm-router';
+ * 1. ✅ PLAN LITE: Solo Claude Sonnet
+ *    - Todas las consultas van a Claude
+ *    - Límite de $25/mes para controlar costos
+ *    - 100 mensajes/mes debería estar bien cubierto
  *
- * const model = selectBestModel({
- *   message: "Necesito analizar este código y refactorizarlo",
- *   userPlan: 'pro',
- *   agentId: 'consultor-tech'
- * });
+ * 2. ✅ PLAN PRO: Solo Claude Sonnet optimizado
+ *    - Usar cache de Claude para reducir costos
+ *    - Límite de $75/mes
+ *    - 1000 mensajes/mes factible con optimización
  *
- * console.log('Modelo seleccionado:', model.name);
- * console.log('Costo estimado:', model.pricing);
+ * 3. ✅ PLAN ELITE: Claude + Gemini selectivo
+ *    - Claude por defecto para todo
+ *    - Gemini solo para multimodal o contexto masivo
+ *    - Límite de $200/mes para casos premium
+ *
+ * 🔄 CUANDO DEEPSEEK ESTÉ DISPONIBLE:
+ * - Simplemente agregar los modelos DeepSeek de vuelta
+ * - Cambiar defaults para usar DeepSeek como primario
+ * - Los planes Lite/Pro tendrán costos MUY reducidos
  */
+
+console.log('🧠 LLM Router configurado SIN DeepSeek - Solo Claude y Gemini');
