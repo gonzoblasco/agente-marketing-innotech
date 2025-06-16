@@ -57,34 +57,111 @@ export default function UsersPage() {
   }
 
   return (
-    <div className='space-y-6'>
-      <div className='flex items-center justify-between'>
+    <div className='space-y-4 sm:space-y-6'>
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
         <div>
-          <h2 className='text-3xl font-bold text-gray-800 mb-2'>
+          <h2 className='text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2'>
             Gestión de Usuarios
           </h2>
-          <p className='text-gray-600'>
-            Administrá planes, límites y permisos de usuarios
+          <p className='text-sm sm:text-base text-gray-600'>
+            Administrá planes, límites y permisos
           </p>
         </div>
-        <div className='text-sm text-gray-500'>
+        <div className='text-xs sm:text-sm text-gray-500'>
           {users.length} usuarios totales
         </div>
       </div>
 
-      {/* Búsqueda */}
-      <div className='bg-white rounded-lg shadow-sm border p-4'>
+      {/* Búsqueda - Mobile optimizado */}
+      <div className='bg-white rounded-lg shadow-sm border p-3 sm:p-4'>
         <input
           type='text'
-          placeholder='Buscar usuarios por email o nombre...'
+          placeholder='Buscar por email o nombre...'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+          className='w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
         />
       </div>
 
-      {/* Lista de usuarios */}
-      <div className='bg-white rounded-lg shadow-sm border overflow-hidden'>
+      {/* Vista móvil - Cards */}
+      <div className='sm:hidden space-y-3'>
+        {filteredUsers.map((user) => (
+          <div
+            key={user.id}
+            className='bg-white rounded-lg shadow-sm border p-4'
+          >
+            {/* Header del usuario */}
+            <div className='flex items-center justify-between mb-3'>
+              <div className='flex items-center'>
+                <div className='h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium text-sm'>
+                  {user.first_name?.[0] || user.email?.[0] || '?'}
+                </div>
+                <div className='ml-3'>
+                  <div className='text-sm font-medium text-gray-900'>
+                    {user.first_name} {user.last_name}
+                  </div>
+                  <div className='text-xs text-gray-500'>{user.email}</div>
+                </div>
+              </div>
+              <span
+                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  user.plan === 'elite'
+                    ? 'bg-purple-100 text-purple-800'
+                    : user.plan === 'pro'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {user.plan?.toUpperCase() || 'LITE'}
+              </span>
+            </div>
+
+            {/* Info del usuario */}
+            <div className='space-y-2 text-sm'>
+              <div className='flex justify-between'>
+                <span className='text-gray-500'>Uso:</span>
+                <span className='font-medium'>
+                  {user.messages_used || 0} / {user.messages_limit || 100}
+                </span>
+              </div>
+              <div className='w-full bg-gray-200 rounded-full h-2'>
+                <div
+                  className={`h-2 rounded-full ${
+                    user.messages_used / user.messages_limit > 0.8
+                      ? 'bg-red-500'
+                      : user.messages_used / user.messages_limit > 0.6
+                      ? 'bg-yellow-500'
+                      : 'bg-green-500'
+                  }`}
+                  style={{
+                    width: `${Math.min(
+                      (user.messages_used / user.messages_limit) * 100,
+                      100
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+              <div className='flex justify-between'>
+                <span className='text-gray-500'>Registro:</span>
+                <span>
+                  {new Date(user.created_at).toLocaleDateString('es-AR')}
+                </span>
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <button
+              onClick={() => setEditingUser(user)}
+              className='w-full mt-3 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium'
+            >
+              Editar
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Vista desktop - Tabla */}
+      <div className='hidden sm:block bg-white rounded-lg shadow-sm border overflow-hidden'>
         <div className='overflow-x-auto'>
           <table className='min-w-full divide-y divide-gray-200'>
             <thead className='bg-gray-50'>
@@ -187,7 +264,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Modal de edición */}
+      {/* Modal de edición - Mobile optimizado */}
       {editingUser && (
         <EditUserModal
           user={editingUser}
@@ -199,7 +276,7 @@ export default function UsersPage() {
   );
 }
 
-// Componente Modal para editar usuario
+// Componente Modal para editar usuario - Mobile optimizado
 function EditUserModal({ user, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     plan: user.plan || 'lite',
@@ -228,22 +305,22 @@ function EditUserModal({ user, onSave, onCancel }) {
   };
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-      <div className='bg-white rounded-lg p-6 w-full max-w-md mx-4'>
-        <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+      <div className='bg-white rounded-lg p-4 sm:p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto'>
+        <h3 className='text-base sm:text-lg font-semibold text-gray-800 mb-4'>
           Editar Usuario: {user.first_name} {user.last_name}
         </h3>
 
-        <form onSubmit={handleSubmit} className='space-y-4'>
+        <form onSubmit={handleSubmit} className='space-y-3 sm:space-y-4'>
           {/* Plan */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
               Plan
             </label>
             <select
               value={formData.plan}
               onChange={(e) => handlePlanChange(e.target.value)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className='w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
             >
               <option value='lite'>Lite (100 mensajes)</option>
               <option value='pro'>Pro (1000 mensajes)</option>
@@ -253,7 +330,7 @@ function EditUserModal({ user, onSave, onCancel }) {
 
           {/* Límite personalizado */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
               Límite de Mensajes
             </label>
             <input
@@ -265,14 +342,14 @@ function EditUserModal({ user, onSave, onCancel }) {
                   messages_limit: parseInt(e.target.value),
                 })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className='w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
               min='0'
             />
           </div>
 
           {/* Mensajes usados */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
               Mensajes Usados
             </label>
             <input
@@ -284,14 +361,14 @@ function EditUserModal({ user, onSave, onCancel }) {
                   messages_used: parseInt(e.target.value),
                 })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className='w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
               min='0'
             />
           </div>
 
           {/* Rol */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
               Rol
             </label>
             <select
@@ -299,7 +376,7 @@ function EditUserModal({ user, onSave, onCancel }) {
               onChange={(e) =>
                 setFormData({ ...formData, role: e.target.value })
               }
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className='w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
             >
               <option value='user'>Usuario</option>
               <option value='admin'>Administrador</option>
@@ -307,17 +384,17 @@ function EditUserModal({ user, onSave, onCancel }) {
           </div>
 
           {/* Botones */}
-          <div className='flex space-x-3 pt-4'>
+          <div className='flex space-x-2 sm:space-x-3 pt-3 sm:pt-4'>
             <button
               type='submit'
-              className='flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors'
+              className='flex-1 bg-blue-600 text-white py-2 px-3 sm:px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base'
             >
               Guardar Cambios
             </button>
             <button
               type='button'
               onClick={onCancel}
-              className='flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors'
+              className='flex-1 bg-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-lg hover:bg-gray-400 transition-colors text-sm sm:text-base'
             >
               Cancelar
             </button>

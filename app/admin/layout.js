@@ -10,6 +10,7 @@ export default function AdminLayout({ children }) {
   const { user, isLoaded } = useUser();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -19,6 +20,11 @@ export default function AdminLayout({ children }) {
       setLoading(false);
     }
   }, [isLoaded, user]);
+
+  // Cerrar menú móvil al cambiar de ruta
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const checkAdminAccess = async () => {
     try {
@@ -42,12 +48,12 @@ export default function AdminLayout({ children }) {
 
   if (!user) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4'>
         <div className='text-center'>
-          <h1 className='text-2xl font-bold text-gray-800 mb-4'>
+          <h1 className='text-xl sm:text-2xl font-bold text-gray-800 mb-4'>
             Acceso Denegado
           </h1>
-          <p className='text-gray-600'>
+          <p className='text-sm sm:text-base text-gray-600'>
             Necesitas iniciar sesión para acceder al panel de admin.
           </p>
         </div>
@@ -57,17 +63,17 @@ export default function AdminLayout({ children }) {
 
   if (!isAdmin) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4'>
         <div className='text-center'>
-          <h1 className='text-2xl font-bold text-gray-800 mb-4'>
+          <h1 className='text-xl sm:text-2xl font-bold text-gray-800 mb-4'>
             🚫 Acceso Denegado
           </h1>
-          <p className='text-gray-600 mb-4'>
+          <p className='text-sm sm:text-base text-gray-600 mb-4'>
             No tienes permisos de administrador.
           </p>
           <Link
             href='/'
-            className='text-blue-600 hover:text-blue-700 underline'
+            className='text-blue-600 hover:text-blue-700 underline text-sm sm:text-base'
           >
             Volver al inicio
           </Link>
@@ -85,29 +91,85 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      {/* Top bar */}
+      {/* Top bar - Mobile optimizado */}
       <div className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 py-4'>
+        <div className='max-w-7xl mx-auto px-4 py-3 sm:py-4'>
           <div className='flex items-center justify-between'>
-            <div className='flex items-center space-x-4'>
-              <Link href='/' className='text-blue-600 hover:text-blue-700'>
-                ← InnoTech Solutions
+            <div className='flex items-center space-x-2 sm:space-x-4'>
+              {/* Botón menú móvil */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className='sm:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100'
+              >
+                <svg
+                  className='h-6 w-6'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                >
+                  {mobileMenuOpen ? (
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M6 18L18 6M6 6l12 12'
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M4 6h16M4 12h16M4 18h16'
+                    />
+                  )}
+                </svg>
+              </button>
+
+              <Link
+                href='/'
+                className='text-blue-600 hover:text-blue-700 text-sm sm:text-base'
+              >
+                ← <span className='hidden sm:inline'>InnoTech Solutions</span>
+                <span className='sm:hidden'>Inicio</span>
               </Link>
-              <h1 className='text-2xl font-bold text-gray-800'>
-                Panel de Admin
+              <h1 className='text-lg sm:text-2xl font-bold text-gray-800'>
+                <span className='hidden sm:inline'>Panel de Admin</span>
+                <span className='sm:hidden'>Admin</span>
               </h1>
             </div>
-            <div className='text-sm text-gray-600'>
-              Admin: {user.firstName} {user.lastName}
+            <div className='text-xs sm:text-sm text-gray-600'>
+              <span className='hidden sm:inline'>Admin:</span> {user.firstName}
             </div>
           </div>
         </div>
       </div>
 
-      <div className='max-w-7xl mx-auto px-4 py-8'>
-        <div className='flex gap-8'>
-          {/* Sidebar */}
-          <div className='w-64'>
+      {/* Menú móvil desplegable */}
+      {mobileMenuOpen && (
+        <div className='sm:hidden bg-white border-b shadow-lg'>
+          <nav className='px-4 py-2 space-y-1'>
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  pathname === item.href
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <span className='mr-3 text-lg'>{item.icon}</span>
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      <div className='max-w-7xl mx-auto px-4 py-4 sm:py-8'>
+        <div className='flex gap-4 sm:gap-8'>
+          {/* Sidebar - Solo desktop */}
+          <div className='hidden sm:block w-64'>
             <nav className='space-y-2'>
               {navigation.map((item) => (
                 <Link
@@ -126,8 +188,8 @@ export default function AdminLayout({ children }) {
             </nav>
           </div>
 
-          {/* Main content */}
-          <div className='flex-1'>{children}</div>
+          {/* Main content - Full width en móvil */}
+          <div className='flex-1 min-w-0'>{children}</div>
         </div>
       </div>
     </div>

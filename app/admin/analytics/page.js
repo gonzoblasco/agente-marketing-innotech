@@ -184,15 +184,6 @@ export default function AnalyticsPage() {
     }).format(amount);
   };
 
-  const getGrowthIndicator = (current, previous) => {
-    if (previous === 0) return { percentage: 0, trend: 'neutral' };
-    const growth = ((current - previous) / previous) * 100;
-    return {
-      percentage: Math.abs(growth).toFixed(1),
-      trend: growth > 0 ? 'up' : growth < 0 ? 'down' : 'neutral',
-    };
-  };
-
   if (loading) {
     return (
       <div className='flex items-center justify-center h-64'>
@@ -202,124 +193,121 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className='space-y-6'>
-      {/* Header */}
-      <div className='flex items-center justify-between'>
+    <div className='space-y-4 sm:space-y-6'>
+      {/* Header - Mobile optimizado */}
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
         <div>
-          <h2 className='text-3xl font-bold text-gray-800 mb-2'>
+          <h2 className='text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2'>
             📊 Analytics Dashboard
           </h2>
-          <p className='text-gray-600'>
+          <p className='text-sm sm:text-base text-gray-600'>
             Métricas de rendimiento de InnoTech Solutions
           </p>
         </div>
 
-        <div className='flex space-x-2'>
+        {/* Time range selector - Mobile optimizado */}
+        <div className='flex space-x-1 sm:space-x-2'>
           {['7d', '30d', '90d'].map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 timeRange === range
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {range === '7d'
-                ? 'Última semana'
-                : range === '30d'
-                ? 'Último mes'
-                : 'Últimos 3 meses'}
+              {range === '7d' ? 'Semana' : range === '30d' ? 'Mes' : '3 meses'}
             </button>
           ))}
         </div>
       </div>
 
-      {/* KPIs Principales */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      {/* KPIs Principales - Mobile optimizado */}
+      <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6'>
         {/* Usuarios Totales */}
-        <div className='bg-white rounded-lg shadow-sm border p-6'>
+        <div className='bg-white rounded-lg shadow-sm border p-3 sm:p-6'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-gray-600'>Usuarios Totales</p>
-              <p className='text-2xl font-bold text-gray-800'>
+              <p className='text-xs sm:text-sm text-gray-600'>Usuarios</p>
+              <p className='text-lg sm:text-2xl font-bold text-gray-800'>
                 {analytics.users.total}
               </p>
               <p className='text-xs text-green-600 mt-1'>
-                +{analytics.users.newThisMonth} este mes
+                +{analytics.users.newThisMonth}
               </p>
             </div>
-            <div className='p-2 bg-blue-100 rounded-lg'>
-              <span className='text-2xl'>👥</span>
+            <div className='p-1.5 sm:p-2 bg-blue-100 rounded-lg'>
+              <span className='text-lg sm:text-2xl'>👥</span>
             </div>
           </div>
         </div>
 
         {/* MRR */}
-        <div className='bg-white rounded-lg shadow-sm border p-6'>
+        <div className='bg-white rounded-lg shadow-sm border p-3 sm:p-6'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-gray-600'>MRR (Ingresos Mensuales)</p>
-              <p className='text-2xl font-bold text-gray-800'>
-                {formatCurrency(analytics.revenue.mrr)}
+              <p className='text-xs sm:text-sm text-gray-600'>MRR</p>
+              <p className='text-lg sm:text-2xl font-bold text-gray-800'>
+                <span className='text-sm sm:text-base'>$</span>
+                {(analytics.revenue.mrr / 1000).toFixed(0)}k
               </p>
               <p className='text-xs text-green-600 mt-1'>
-                Proyección anual:{' '}
-                {formatCurrency(analytics.revenue.projectedAnnual)}
+                Anual: ${(analytics.revenue.projectedAnnual / 1000).toFixed(0)}k
               </p>
             </div>
-            <div className='p-2 bg-green-100 rounded-lg'>
-              <span className='text-2xl'>💰</span>
+            <div className='p-1.5 sm:p-2 bg-green-100 rounded-lg'>
+              <span className='text-lg sm:text-2xl'>💰</span>
             </div>
           </div>
         </div>
 
         {/* Mensajes */}
-        <div className='bg-white rounded-lg shadow-sm border p-6'>
+        <div className='bg-white rounded-lg shadow-sm border p-3 sm:p-6'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-gray-600'>Mensajes Totales</p>
-              <p className='text-2xl font-bold text-gray-800'>
+              <p className='text-xs sm:text-sm text-gray-600'>Mensajes</p>
+              <p className='text-lg sm:text-2xl font-bold text-gray-800'>
                 {analytics.messages.total}
               </p>
               <p className='text-xs text-blue-600 mt-1'>
                 {analytics.messages.thisMonth} este mes
               </p>
             </div>
-            <div className='p-2 bg-purple-100 rounded-lg'>
-              <span className='text-2xl'>💬</span>
+            <div className='p-1.5 sm:p-2 bg-purple-100 rounded-lg'>
+              <span className='text-lg sm:text-2xl'>💬</span>
             </div>
           </div>
         </div>
 
         {/* Tasa de Conversión */}
-        <div className='bg-white rounded-lg shadow-sm border p-6'>
+        <div className='bg-white rounded-lg shadow-sm border p-3 sm:p-6'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-gray-600'>Tasa de Conversión</p>
-              <p className='text-2xl font-bold text-gray-800'>
+              <p className='text-xs sm:text-sm text-gray-600'>Conversión</p>
+              <p className='text-lg sm:text-2xl font-bold text-gray-800'>
                 {analytics.revenue.conversionRate}%
               </p>
               <p className='text-xs text-orange-600 mt-1'>
-                {analytics.users.byPlan.pro + analytics.users.byPlan.elite}{' '}
-                usuarios de pago
+                {analytics.users.byPlan.pro + analytics.users.byPlan.elite} de
+                pago
               </p>
             </div>
-            <div className='p-2 bg-orange-100 rounded-lg'>
-              <span className='text-2xl'>📈</span>
+            <div className='p-1.5 sm:p-2 bg-orange-100 rounded-lg'>
+              <span className='text-lg sm:text-2xl'>📈</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Distribución de Planes y Agentes Más Usados */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+      {/* Distribución de Planes y Agentes Más Usados - Mobile optimizado */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
         {/* Distribución de Planes */}
-        <div className='bg-white rounded-lg shadow-sm border p-6'>
-          <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+        <div className='bg-white rounded-lg shadow-sm border p-4 sm:p-6'>
+          <h3 className='text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4'>
             💎 Distribución de Planes
           </h3>
-          <div className='space-y-4'>
+          <div className='space-y-3 sm:space-y-4'>
             {Object.entries(analytics.users.byPlan).map(([plan, count]) => {
               const percentage =
                 analytics.users.total > 0
@@ -333,15 +321,19 @@ export default function AnalyticsPage() {
 
               return (
                 <div key={plan} className='flex items-center justify-between'>
-                  <div className='flex items-center space-x-3'>
+                  <div className='flex items-center space-x-2 sm:space-x-3'>
                     <div
-                      className={`w-3 h-3 rounded-full ${colors[plan]}`}
+                      className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${colors[plan]}`}
                     ></div>
-                    <span className='font-medium capitalize'>{plan}</span>
+                    <span className='font-medium capitalize text-sm sm:text-base'>
+                      {plan}
+                    </span>
                   </div>
                   <div className='text-right'>
-                    <span className='font-bold'>{count}</span>
-                    <span className='text-sm text-gray-500 ml-2'>
+                    <span className='font-bold text-sm sm:text-base'>
+                      {count}
+                    </span>
+                    <span className='text-xs sm:text-sm text-gray-500 ml-1 sm:ml-2'>
                       ({percentage}%)
                     </span>
                   </div>
@@ -352,25 +344,31 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Agentes Más Usados */}
-        <div className='bg-white rounded-lg shadow-sm border p-6'>
-          <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+        <div className='bg-white rounded-lg shadow-sm border p-4 sm:p-6'>
+          <h3 className='text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4'>
             🤖 Agentes Más Usados
           </h3>
-          <div className='space-y-3'>
+          <div className='space-y-2 sm:space-y-3'>
             {analytics.agents.mostUsed.slice(0, 5).map((agent, index) => (
               <div key={agent.id} className='flex items-center justify-between'>
-                <div className='flex items-center space-x-3'>
-                  <span className='text-lg'>{agent.emoji}</span>
-                  <span className='font-medium'>{agent.name}</span>
+                <div className='flex items-center space-x-2 sm:space-x-3'>
+                  <span className='text-base sm:text-lg'>{agent.emoji}</span>
+                  <span className='font-medium text-sm sm:text-base truncate max-w-[150px] sm:max-w-none'>
+                    {agent.name}
+                  </span>
                 </div>
-                <div className='flex items-center space-x-2'>
-                  <span className='font-bold'>{agent.usage}</span>
-                  <span className='text-sm text-gray-500'>conversaciones</span>
+                <div className='flex items-center space-x-1 sm:space-x-2'>
+                  <span className='font-bold text-sm sm:text-base'>
+                    {agent.usage}
+                  </span>
+                  <span className='text-xs sm:text-sm text-gray-500'>
+                    chats
+                  </span>
                 </div>
               </div>
             ))}
             {analytics.agents.mostUsed.length === 0 && (
-              <p className='text-gray-500 text-center py-4'>
+              <p className='text-gray-500 text-center py-4 text-sm'>
                 No hay datos de uso aún
               </p>
             )}
@@ -378,46 +376,48 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Métricas de Engagement */}
-      <div className='bg-white rounded-lg shadow-sm border p-6'>
-        <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+      {/* Métricas de Engagement - Mobile optimizado */}
+      <div className='bg-white rounded-lg shadow-sm border p-4 sm:p-6'>
+        <h3 className='text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4'>
           ⚡ Métricas de Engagement
         </h3>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6'>
           <div className='text-center'>
-            <p className='text-2xl font-bold text-blue-600'>
+            <p className='text-xl sm:text-2xl font-bold text-blue-600'>
               {analytics.engagement.activeUsers}
             </p>
-            <p className='text-sm text-gray-600'>Usuarios Activos</p>
+            <p className='text-xs sm:text-sm text-gray-600'>Usuarios Activos</p>
             <p className='text-xs text-gray-500 mt-1'>
-              {analytics.engagement.returnRate}% de tasa de actividad
+              {analytics.engagement.returnRate}% de actividad
             </p>
           </div>
 
           <div className='text-center'>
-            <p className='text-2xl font-bold text-green-600'>
+            <p className='text-xl sm:text-2xl font-bold text-green-600'>
               {analytics.messages.averagePerUser}
             </p>
-            <p className='text-sm text-gray-600'>Mensajes por Usuario</p>
+            <p className='text-xs sm:text-sm text-gray-600'>Mensajes/Usuario</p>
             <p className='text-xs text-gray-500 mt-1'>Promedio histórico</p>
           </div>
 
           <div className='text-center'>
-            <p className='text-2xl font-bold text-purple-600'>
+            <p className='text-xl sm:text-2xl font-bold text-purple-600'>
               {analytics.agents.total}
             </p>
-            <p className='text-sm text-gray-600'>Agentes Disponibles</p>
+            <p className='text-xs sm:text-sm text-gray-600'>
+              Agentes Disponibles
+            </p>
             <p className='text-xs text-gray-500 mt-1'>En el catálogo</p>
           </div>
         </div>
       </div>
 
-      {/* Botón de Actualizar */}
+      {/* Botón de Actualizar - Mobile optimizado */}
       <div className='text-center'>
         <button
           onClick={loadAnalytics}
           disabled={loading}
-          className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors'
+          className='bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm sm:text-base'
         >
           {loading ? 'Actualizando...' : '🔄 Actualizar Datos'}
         </button>
