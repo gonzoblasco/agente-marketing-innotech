@@ -231,6 +231,8 @@ export default function AgentsPage() {
                   <button
                     onClick={() => handleDeleteAgent(agent.id)}
                     className='px-3 bg-red-500 text-white rounded text-sm hover:bg-red-600'
+                    aria-label={`Eliminar agente ${agent.name}`}
+                    title={`Eliminar agente ${agent.name}`}
                   >
                     <i className='fas fa-trash'></i>
                   </button>
