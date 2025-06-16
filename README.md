@@ -84,6 +84,18 @@ Cada agente se define en `app/data/agents.js` con:
 - **Personalidad:** System prompt detallado
 - **UX:** Mensaje de bienvenida personalizado
 
+## 💳 Monetización y Planes
+
+InnoTech Solutions utiliza MercadoPago como pasarela de pagos principal para Argentina, facilitando transacciones en pesos argentinos (ARS).
+
+### Estructura de Precios:
+
+-   **Plan Lite:** Gratuito - Acceso a 3 agentes básicos, 100 mensajes/mes.
+-   **Plan Pro:** $30.000 ARS/mes - Catálogo completo de agentes, 1000 mensajes/mes.
+-   **Plan Elite:** $60.000 ARS/mes - Catálogo premium + agentes avanzados, 2000 mensajes/mes.
+
+*(Nota: Los precios en USD son aproximados y pueden variar según el tipo de cambio. Plan Pro: ~$25 USD, Plan Elite: ~$50 USD)*
+
 ## 🚀 Guía de Desarrollo
 
 ### Instalación
@@ -95,6 +107,9 @@ cd agente-marketing-innotech
 
 # Instalar dependencias
 npm install
+
+# Instalar SDK de MercadoPago
+npm install mercadopago
 
 # Configurar variables de entorno
 cp .env.example .env.local
@@ -108,6 +123,11 @@ npm run dev
 
 ```env
 CLAUDE_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# MercadoPago Variables
+MERCADOPAGO_ACCESS_TOKEN=your_access_token
+MERCADOPAGO_PUBLIC_KEY=your_public_key
+MERCADOPAGO_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ### URLs del MVP
@@ -133,24 +153,26 @@ CLAUDE_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 - [x] SEO optimizado para cada página
 - [x] Deploy en producción (Vercel)
 
-### 🎯 Próximo (Día 2)
+### 🎯 En Progreso (Día 2):
 
-- [ ] Sistema de usuarios y autenticación
-- [ ] Persistencia de conversaciones en base de datos
-- [ ] Contador de mensajes por usuario
-- [ ] Sistema de planes y monetización con MercadoPago
+- [ ] Sistema de usuarios y autenticación (Clerk/NextAuth.js)
+- [ ] Persistencia de conversaciones en base de datos (Supabase/PlanetScale)
+- [ ] Contador de mensajes por usuario y límites por plan
+- [ ] Integración básica de MercadoPago (pagos únicos, no recurrentes)
+- [ ] Dashboard básico de usuario
 - [ ] Exportar/importar contexto de conversaciones
-- [ ] Dashboard de usuario
 - [ ] Métricas y analytics
 
 ### 🔮 Futuro (Días 3+)
 
 - [ ] Más agentes especializados
-- [ ] Integración completa con MercadoPago (suscripciones recurrentes)
+- [ ] Integración COMPLETA con MercadoPago (suscripciones recurrentes automáticas, manejo de renovaciones, upgrades/downgrades automáticos)
 - [ ] API pública para terceros
 - [ ] Mobile app (React Native)
 - [ ] Agentes con memoria a largo plazo
 - [ ] Integración con herramientas empresariales
+- [ ] Dashboard de usuario avanzado (métricas de uso, gestión de suscripción)
+- [ ] Trackeo de Métricas Clave (Tasa de conversión Free → Pro, Churn rate, MRR, CAC)
 
 ## 🛠️ Cómo Agregar un Nuevo Agente
 
@@ -254,4 +276,4 @@ Emprendedor y consultor en IA aplicada, Buenos Aires, Argentina.
 
 ---
 
-_Documentación actualizada: Día 1 completado - Día 2 por comenzar_
+_Documentación actualizada: Día 2 en progreso_
